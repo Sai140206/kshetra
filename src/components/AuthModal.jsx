@@ -25,7 +25,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
 import { AudioReadButton } from './AudioReadButton';
 
-export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = false }) => {
+export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = false, initialMode = 'login' }) => {
   const { 
     language, 
     t, 
@@ -39,8 +39,15 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = fals
     farmerBookings 
   } = useLanguage();
 
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'signup'
+  const [authMode, setAuthMode] = useState(initialMode || 'login'); // 'login' | 'signup'
   const [loginMethod, setLoginMethod] = useState('otp'); // 'otp' | 'pin'
+
+  // Keep authMode synced when opened with a specific mode
+  useEffect(() => {
+    if (initialMode) {
+      setAuthMode(initialMode);
+    }
+  }, [initialMode, isOpen]);
   
   // Login Form State
   const [mobile, setMobile] = useState('');

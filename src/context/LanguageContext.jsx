@@ -200,6 +200,8 @@ export const TRANSLATIONS = {
     voiceRecognized: 'Recognized Voice Command',
     login: 'Login',
     signup: 'Sign Up',
+    register: 'Register',
+    loginOrRegister: 'Login / Register',
     logout: 'Logout',
     welcomeBack: 'Welcome Back!',
     createAccount: 'Create Farmer Account',
@@ -440,6 +442,8 @@ export const TRANSLATIONS = {
     voiceRecognized: 'आवाज ओळखला गेला',
     login: 'लॉगिन करा',
     signup: 'नवीन नोंदणी',
+    register: 'नोंदणी करा',
+    loginOrRegister: 'लॉगिन / नोंदणी',
     logout: 'लॉगआउट',
     welcomeBack: 'पुन्हा स्वागत आहे!',
     createAccount: 'नवीन शेतकरी खाते उघडा',
@@ -680,6 +684,8 @@ export const TRANSLATIONS = {
     voiceRecognized: 'आवाज पहचानी गई',
     login: 'लॉगिन करें',
     signup: 'नया पंजीकरण',
+    register: 'पंजीकरण करें',
+    loginOrRegister: 'लॉगिन / पंजीकरण',
     logout: 'लॉगआउट',
     welcomeBack: 'पुनः स्वागत है!',
     createAccount: 'नया किसान खाता बनाएं',
@@ -741,7 +747,12 @@ export const LanguageProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('kshetra_user');
-      return savedUser ? JSON.parse(savedUser) : null;
+      if (!savedUser) return null;
+      const parsed = JSON.parse(savedUser);
+      if (parsed && typeof parsed === 'object' && parsed.name && (parsed.mobile || parsed.id)) {
+        return parsed;
+      }
+      return null;
     } catch (e) {
       return null;
     }

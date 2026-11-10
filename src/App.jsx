@@ -26,10 +26,16 @@ const MainAppContent = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState('login');
   const [showBookingsDrawer, setShowBookingsDrawer] = useState(false);
   const [voiceSearchQuery, setVoiceSearchQuery] = useState('');
   const [voiceCropId, setVoiceCropId] = useState('onion');
   const [voiceIssue, setVoiceIssue] = useState('tractor_engine');
+
+  const openAuthModal = (mode = 'login') => {
+    setAuthModalMode(mode);
+    setIsAuthModalOpen(true);
+  };
 
   // Handle voice command selection
   const handleSelectVoiceAction = (targetTab, filterOrQuery) => {
@@ -61,6 +67,7 @@ const MainAppContent = () => {
         setActiveTab={setActiveTab} 
         setIsVoiceModalOpen={setIsVoiceModalOpen} 
         setIsAuthModalOpen={setIsAuthModalOpen}
+        openAuthModal={openAuthModal}
       />
 
       {/* Main Content Area */}
@@ -299,6 +306,7 @@ const MainAppContent = () => {
       {/* Popup Auth Modal (Triggered from anywhere) */}
       <AuthModal
         isOpen={isAuthModalOpen}
+        initialMode={authModalMode}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={() => setIsAuthModalOpen(false)}
       />

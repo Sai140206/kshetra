@@ -18,7 +18,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
 
-export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuthModalOpen }) => {
+export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuthModalOpen, openAuthModal }) => {
   const { 
     language, 
     setLanguage, 
@@ -166,29 +166,51 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
             ))}
           </div>
 
-          {/* User Auth Button / Profile Indicator */}
+          {/* User Auth Section */}
           <div className="flex items-center">
             {currentUser ? (
-              <button
-                onClick={() => setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth')}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-teal-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-950 rounded-xl border border-emerald-300 text-xs sm:text-sm font-bold shadow-sm transition-all"
-                title={currentUser.name}
-              >
-                <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px] font-black shadow-inner">
-                  {currentUser.name ? currentUser.name.charAt(0) : '🌾'}
-                </div>
-                <span className="truncate max-w-[75px] sm:max-w-[110px]">{currentUser.name}</span>
-                <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
-              </button>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <button
+                  onClick={() => openAuthModal ? openAuthModal('profile') : (setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth'))}
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-teal-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-950 rounded-xl border border-emerald-300 text-xs sm:text-sm font-bold shadow-sm transition-all"
+                  title={`${currentUser.name} (${currentUser.role === 'farmer' ? t.roleFarmer : t.roleProvider})`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px] font-black shadow-inner">
+                    {currentUser.name ? currentUser.name.charAt(0) : '🌾'}
+                  </div>
+                  <span className="truncate max-w-[75px] sm:max-w-[110px]">{currentUser.name}</span>
+                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                </button>
+
+                <button
+                  onClick={logoutUser}
+                  className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-900 rounded-xl border border-rose-200 text-xs font-bold transition-all shadow-sm active:scale-95"
+                  title={t.logout}
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{t.logout}</span>
+                </button>
+              </div>
             ) : (
-              <button
-                onClick={() => setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth')}
-                className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-700 to-agri-900 hover:from-emerald-800 hover:to-agri-950 text-white rounded-xl text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all"
-              >
-                <User className="w-3.5 h-3.5 text-amber-300" />
-                <span className="hidden xs:inline">{t.login}</span>
-                <span className="xs:hidden">{t.login.split(' ')[0]}</span>
-              </button>
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => openAuthModal ? openAuthModal('login') : (setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth'))}
+                  className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-700 to-agri-900 hover:from-emerald-800 hover:to-agri-950 text-white rounded-xl text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all"
+                  title={t.login}
+                >
+                  <User className="w-3.5 h-3.5 text-amber-300" />
+                  <span>{t.login}</span>
+                </button>
+
+                <button
+                  onClick={() => openAuthModal ? openAuthModal('signup') : (setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth'))}
+                  className="hidden xs:flex items-center gap-1 px-2.5 sm:px-3 py-1.5 bg-amber-400 hover:bg-amber-500 text-gray-950 rounded-xl text-xs sm:text-sm font-black shadow-sm active:scale-95 transition-all border border-amber-500"
+                  title={t.signup}
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-gray-950" />
+                  <span>{t.register || t.signup}</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -280,18 +302,6 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
             <Wrench className="w-4 h-4 text-rose-600" />
             <span>{t.navSos}</span>
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-          </button>
-
-          <button
-            onClick={() => setActiveTab('auth')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors touch-target ${
-              activeTab === 'auth'
-                ? 'bg-emerald-900 text-white shadow-sm'
-                : 'text-emerald-950 bg-emerald-50/90 hover:bg-emerald-100 border border-emerald-200'
-            }`}
-          >
-            <User className="w-4 h-4 text-emerald-600" />
-            <span>{currentUser ? currentUser.name : t.navAuth}</span>
           </button>
 
           <button
