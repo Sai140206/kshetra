@@ -11,6 +11,7 @@ import { ProviderDashboard } from './components/ProviderDashboard';
 import { VaniVoiceModal } from './components/VaniVoiceModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthGateway } from './components/AuthGateway';
+import { UserProfile } from './components/UserProfile';
 import { 
   Truck, 
   TrendingUp, 
@@ -310,9 +311,14 @@ const MainAppContent = () => {
           <ProviderDashboard />
         )}
 
-        {/* TAB 7: LOGIN / SIGNUP / PROFILE */}
+        {/* TAB 7: LOGIN / SIGNUP / GUEST GATEWAY */}
         {activeTab === 'auth' && (
-          <AuthModal isPage={true} onAuthSuccess={() => setActiveTab('home')} />
+          <AuthModal isPage={true} onAuthSuccess={() => setActiveTab('profile')} />
+        )}
+
+        {/* TAB 8: UNIFIED DUAL-MODE USER PROFILE (FARMER & SERVICE PROVIDER) */}
+        {activeTab === 'profile' && (
+          <UserProfile isPage={true} onNavigateTab={setActiveTab} />
         )}
 
       </main>

@@ -251,7 +251,48 @@ export const TRANSLATIONS = {
     skipToHome: 'Skip to Home',
     skipSubtitle: 'You can explore all farm machinery, transport pools, mandi rates & SOS mechanics without logging in.',
     loginToContinue: 'Login or Sign Up to Continue',
-    guestModeNotice: 'Guest Mode: You can browse freely. Login anytime to book machinery or register equipment.'
+    guestModeNotice: 'Guest Mode: You can browse freely. Login anytime to book machinery or register equipment.',
+    editProfile: 'Edit Profile',
+    saveProfile: 'Save Changes',
+    cancelEdit: 'Cancel',
+    dualModeBadge: 'Farmer & Service Provider',
+    activeMode: 'Active Mode',
+    modeFarmerName: 'Farmer Mode',
+    modeProviderName: 'Service Provider Mode',
+    switchToFarmer: 'Switch to Farmer Mode',
+    switchToProvider: 'Switch to Service Provider Mode',
+    providerStatus: 'Provider Status',
+    providerActive: 'Provider Activated',
+    providerInactive: 'Provider Inactive',
+    enableProviderPrompt: 'Own tractors, machinery or offer agricultural services?',
+    enableProviderBtn: 'Activate Service Provider on this Profile',
+    disableProviderBtn: 'Deactivate Provider Mode',
+    personalSection: 'Personal & Contact Information',
+    farmingSection: 'Farmer Details (Landholding & Crops)',
+    providerSection: 'Service Provider & Machinery Details',
+    alternateMobile: 'Alternate / WhatsApp Number',
+    bioTagline: 'Short Bio / Intro',
+    bioPlaceholder: 'e.g. Progressive farmer & Swaraj tractor owner with 8 years experience',
+    farmingType: 'Farming Practice',
+    irrigationSource: 'Irrigation Source',
+    businessName: 'Custom Hiring / Business Name',
+    businessPlaceholder: 'e.g. Patil Krishi Yantra Seva Kendra',
+    operatingRadius: 'Service Radius (KM)',
+    experienceYears: 'Experience in Farming / Services (Years)',
+    sosMechanicOptIn: 'Opt-in for Gram-Mechanic SOS Alerts',
+    sosMechanicDesc: 'Receive alerts when local farmers experience field machine breakdowns',
+    myMachinesTitle: 'My Machinery & Services',
+    addMachineBtn: '+ Add Machine / Service',
+    noMachinesYet: 'No equipment listed yet. Add your machinery to start receiving rental requests!',
+    removeMachine: 'Remove',
+    machineRateLabel: 'Rental Rate (₹)',
+    machineUnitLabel: 'Per Unit',
+    profileUpdatedSuccess: 'Profile updated successfully!',
+    modeSwitchedSuccess: 'Switched to {mode}',
+    avatarLabel: 'Profile Icon',
+    quickFillDemo: 'Fill Sample Details',
+    profileTitle: 'Unified Kisan Profile',
+    profileSubtitle: 'One unified profile for farm management, machinery rental & custom services'
   },
   mr: {
     appTitle: 'क्षेत्र (KSHETRA)',
@@ -500,7 +541,48 @@ export const TRANSLATIONS = {
     skipToHome: 'लॉगिन न करता पुढे जा',
     skipSubtitle: 'आपण लॉगिन न करताही सर्व ट्रॅक्टर, कृषी अवजारे, बाजारभाव व मिस्त्री सेवा पाहू शकता.',
     loginToContinue: 'ॲपमध्ये पुढे जाण्यासाठी लॉगिन किंवा नोंदणी करा',
-    guestModeNotice: 'अतिथी मोड: आपण ॲप सहज वापरू शकता. यंत्र बुकिंग किंवा नोंदणीसाठी केव्हाही लॉगिन करा.'
+    guestModeNotice: 'अतिथी मोड: आपण ॲप सहज वापरू शकता. यंत्र बुकिंग किंवा नोंदणीसाठी केव्हाही लॉगिन करा.',
+    editProfile: 'प्रोफाईल संपादन करा',
+    saveProfile: 'बदल जतन करा',
+    cancelEdit: 'रद्द करा',
+    dualModeBadge: 'शेतकरी व सेवा प्रदाता (Dual Mode)',
+    activeMode: 'सध्याचे सक्रिय स्वरूप',
+    modeFarmerName: 'शेतकरी मोड (Farmer)',
+    modeProviderName: 'सेवा प्रदाता मोड (Service Provider)',
+    switchToFarmer: 'शेतकरी मोड सुरू करा',
+    switchToProvider: 'सेवा प्रदाता मोड सुरू करा',
+    providerStatus: 'सेवा प्रदाता स्थिती',
+    providerActive: 'सेवा प्रदाता सक्रिय',
+    providerInactive: 'प्रदाता मोड निष्क्रिय',
+    enableProviderPrompt: 'आपल्याकडे ट्रॅक्टर, कृषी अवजारे किंवा मालवाहू पिकअप आहे का?',
+    enableProviderBtn: 'या प्रोफाईलवर सेवा प्रदाता मोड सक्रिय करा',
+    disableProviderBtn: 'सेवा प्रदाता मोड बंद करा',
+    personalSection: 'वैयक्तिक व संपर्क माहिती',
+    farmingSection: 'शेती व शेतजमीन माहिती (जमीन व पिके)',
+    providerSection: 'यंत्रसामग्री व सेवा माहिती (अवजारे व भाडे)',
+    alternateMobile: 'पर्यायी / व्हॉट्सॲप नंबर',
+    bioTagline: 'थोडक्यात माहिती / परिचय',
+    bioPlaceholder: 'उदा. प्रगतीशील शेतकरी व स्वराज ७४४ ट्रॅक्टर मालक (८ वर्षांचा अनुभव)',
+    farmingType: 'शेतीची पद्धत',
+    irrigationSource: 'पाणी पुरवठा / सिंचन सोय',
+    businessName: 'कृषी केंद्र / व्यवसाय नाव',
+    businessPlaceholder: 'उदा. पाटील कृषी अवजार व ट्रॅक्टर सेवा केंद्र',
+    operatingRadius: 'सेवा कार्यक्षेत्र त्रिज्या (कि.मी.)',
+    experienceYears: 'अनुभव (वर्षे)',
+    sosMechanicOptIn: 'शेतातील मेकॅनिक SOS कॉल मिळवा',
+    sosMechanicDesc: 'परिसरातील शेतकऱ्यांचे ट्रॅक्टर/मोटर शेतात बंद पडल्यास आपत्कालीन सूचना मिळवा',
+    myMachinesTitle: 'माझी नोंदणीकृत यंत्रे व अवजारे',
+    addMachineBtn: '+ नवीन अवजार/यंत्र जोडा',
+    noMachinesYet: 'अद्याप कोणतेही यंत्र जोडलेले नाही. भाडे उत्पन्न मिळवण्यासाठी नवीन यंत्र जोडा!',
+    removeMachine: 'काढून टाका',
+    machineRateLabel: 'भाडे दर (₹)',
+    machineUnitLabel: 'दर प्रमाण',
+    profileUpdatedSuccess: 'प्रोफाईल माहिती यशस्वीरीत्या अद्ययावत झाली!',
+    modeSwitchedSuccess: '{mode} सुरू केला!',
+    avatarLabel: 'प्रोफाईल चिन्ह',
+    quickFillDemo: 'नमुना माहिती भरा',
+    profileTitle: 'एकात्मिक शेतकरी प्रोफाईल',
+    profileSubtitle: 'शेती कामे, यंत्र भाडे व सेवा वाटणीसाठी एकाच खात्यात दोन्ही सुविधा'
   },
   hi: {
     appTitle: 'क्षेत्र (KSHETRA)',
@@ -749,9 +831,71 @@ export const TRANSLATIONS = {
     skipToHome: 'लॉगिन किए बिना आगे बढ़ें',
     skipSubtitle: 'आप बिना लॉगिन के भी सभी ट्रैक्टर, कृषि यंत्र, मंडी भाव और मिस्त्री सेवा देख व उपयोग कर सकते हैं।',
     loginToContinue: 'आगे बढ़ने के लिए लॉगिन या नया खाता बनाएं',
-    guestModeNotice: 'अतिथि मोड: आप ऐप का स्वतंत्र रूप से उपयोग कर सकते हैं। बुकिंग हेतु कभी भी लॉगिन करें।'
+    guestModeNotice: 'अतिथि मोड: आप ऐप का स्वतंत्र रूप से उपयोग कर सकते हैं। बुकिंग हेतु कभी भी लॉगिन करें।',
+    editProfile: 'प्रोफ़ाइल संपादित करें',
+    saveProfile: 'बदलाव सुरक्षित करें',
+    cancelEdit: 'रद्द करें',
+    dualModeBadge: 'किसान व सेवा प्रदाता (Dual Mode)',
+    activeMode: 'वर्तमान सक्रिय स्वरूप',
+    modeFarmerName: 'किसान मोड (Farmer)',
+    modeProviderName: 'सेवा प्रदाता मोड (Service Provider)',
+    switchToFarmer: 'किसान मोड शुरू करें',
+    switchToProvider: 'सेवा प्रदाता मोड शुरू करें',
+    providerStatus: 'सेवा प्रदाता स्थिति',
+    providerActive: 'सेवा प्रदाता सक्रिय',
+    providerInactive: 'प्रदाता मोड निष्क्रिय',
+    enableProviderPrompt: 'क्या आपके पास ट्रैक्टर, कृषि यंत्र या लोडिंग वाहन है?',
+    enableProviderBtn: 'इस प्रोफ़ाइल पर सेवा प्रदाता मोड सक्रिय करें',
+    disableProviderBtn: 'सेवा प्रदाता मोड बंद करें',
+    personalSection: 'व्यक्तिगत व संपर्क विवरण',
+    farmingSection: 'खेती व भूमि विवरण (जमीन व फसलें)',
+    providerSection: 'मशीनरी व सेवा विवरण (उपकरण व किराया)',
+    alternateMobile: 'अतिरिक्त / व्हाट्सएप नंबर',
+    bioTagline: 'संक्षिप्त परिचय / नोट',
+    bioPlaceholder: 'उदा. प्रगतिशील किसान व स्वराज 744 ट्रैक्टर मालिक (8 वर्ष अनुभव)',
+    farmingType: 'खेती का प्रकार',
+    irrigationSource: 'सिंचाई का साधन',
+    businessName: 'कृषि केंद्र / व्यापार नाम',
+    businessPlaceholder: 'उदा. पाटिल कृषि यंत्र व ट्रैक्टर सेवा केंद्र',
+    operatingRadius: 'सेवा कार्यक्षेत्र (किमी)',
+    experienceYears: 'अनुभव (वर्ष)',
+    sosMechanicOptIn: 'खेत में मिस्त्री SOS अलर्ट प्राप्त करें',
+    sosMechanicDesc: 'आसपास के किसानों के ट्रैक्टर/मोटर खराब होने पर आपातकालीन सूचना प्राप्त करें',
+    myMachinesTitle: 'मेरी पंजीकृत मशीनें व उपकरण',
+    addMachineBtn: '+ नई मशीन/उपकरण जोड़ें',
+    noMachinesYet: 'अभी कोई मशीन जोड़ी नहीं गई है। किराया कमाने हेतु नई मशीन जोड़ें!',
+    removeMachine: 'हटाएं',
+    machineRateLabel: 'किराया दर (₹)',
+    machineUnitLabel: 'इकाई',
+    profileUpdatedSuccess: 'प्रोफ़ाइल विवरण सफलतापूर्वक अपडेट हुआ!',
+    modeSwitchedSuccess: '{mode} सक्रिय किया गया!',
+    avatarLabel: 'प्रोफ़ाइल चिह्न',
+    quickFillDemo: 'सैंपल जानकारी भरें',
+    profileTitle: 'एकीकृत किसान प्रोफ़ाइल',
+    profileSubtitle: 'कृषि कार्य, उपकरण किराया व सेवा साझा करने हेतु एक ही खाते में दोनों सुविधाएं'
   }
 };
+
+export const DEFAULT_USER_MACHINES = [
+  {
+    id: 'm-1',
+    name: 'Mahindra 575 DI (45 HP) + 7ft Rotavator',
+    rate: 850,
+    unitKey: 'hourUnit',
+    status: 'available',
+    jobsDone: 38,
+    rating: 4.9
+  },
+  {
+    id: 'm-2',
+    name: 'Bolero Maxi Truck (1.8 Ton APMC Cargo)',
+    rate: 22,
+    unitKey: 'kmUnit',
+    status: 'available',
+    jobsDone: 76,
+    rating: 4.8
+  }
+];
 
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguageState] = useState(() => {
@@ -804,19 +948,125 @@ export const LanguageProvider = ({ children }) => {
   };
 
   const loginUser = (userData) => {
-    setCurrentUser(userData);
-    localStorage.setItem('kshetra_user', JSON.stringify(userData));
+    const userRole = userData.activeMode || userData.role || 'farmer';
+    const enrichedUser = {
+      id: userData.id || `usr-${Date.now().toString().slice(-4)}`,
+      name: userData.name || (language === 'mr' ? 'रमेश पाटील' : language === 'hi' ? 'रमेश पाटिल' : 'Ramesh Patil'),
+      mobile: userData.mobile || '9822012345',
+      whatsapp: userData.whatsapp || userData.mobile || '9822012345',
+      avatar: userData.avatar || '👨‍🌾',
+      bio: userData.bio || (language === 'mr' ? 'शिरूर परिसरातील शेतकरी व ट्रॅक्टर मालक' : language === 'hi' ? 'शिरूर के प्रगतिशील किसान व ट्रैक्टर मालिक' : 'Farmer & equipment owner in Shirur'),
+      location: userData.location || selectedLocation,
+      landAcre: userData.landAcre || '4.5',
+      primaryCrop: userData.primaryCrop || (language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane'),
+      farmingType: userData.farmingType || (language === 'mr' ? 'बागायती व सेंद्रिय' : language === 'hi' ? 'सिंचित व जैविक' : 'Irrigated & Organic'),
+      irrigationType: userData.irrigationType || (language === 'mr' ? 'ठिबक सिंचन + विहीर' : language === 'hi' ? 'ड्रिप सिंचाई + कुआं' : 'Drip & Well'),
+      activeMode: userRole,
+      role: userRole,
+      isProviderEnabled: userData.isProviderEnabled !== undefined ? userData.isProviderEnabled : true,
+      businessName: userData.businessName || (language === 'mr' ? 'पाटील कृषी अवजार सेवा केंद्र' : language === 'hi' ? 'पाटिल कृषि उपकरण सेवा केंद्र' : 'Patil Agri Equipment Hub'),
+      operatingRadiusKm: userData.operatingRadiusKm || 25,
+      experienceYears: userData.experienceYears || 6,
+      mechanicSosOptIn: userData.mechanicSosOptIn !== undefined ? userData.mechanicSosOptIn : false,
+      machines: userData.machines && userData.machines.length > 0 ? userData.machines : DEFAULT_USER_MACHINES,
+      joinedDate: userData.joinedDate || '2026-02-15',
+      isVerified: true,
+      ...userData
+    };
+
+    setCurrentUser(enrichedUser);
+    localStorage.setItem('kshetra_user', JSON.stringify(enrichedUser));
     setAuthSkipped(true);
     sessionStorage.setItem('kshetra_auth_skipped', 'true');
-    if (userData.role) {
-      setRole(userData.role);
-    }
+    setRole(enrichedUser.activeMode);
+
     const welcome = language === 'mr' 
-      ? `स्वागत आहे, ${userData.name}! आपण आता लॉगिन आहात.`
+      ? `स्वागत आहे, ${enrichedUser.name}! क्षेत्र एकात्मिक शेतकरी खात्यात आपले स्वागत आहे.`
       : language === 'hi'
-      ? `स्वागत है, ${userData.name}! आप अब लॉगिन हैं।`
-      : `Welcome, ${userData.name}! You are logged in.`;
+      ? `स्वागत है, ${enrichedUser.name}! क्षेत्र एकीकृत किसान खाते में आपका स्वागत है।`
+      : `Welcome, ${enrichedUser.name}! Logged into your unified profile.`;
     showToast(welcome, 'success');
+  };
+
+  const updateUserProfile = (updatedFields) => {
+    let finalUser = null;
+    setCurrentUser((prev) => {
+      const merged = { ...(prev || {}), ...updatedFields };
+      if (updatedFields.activeMode) {
+        merged.role = updatedFields.activeMode;
+        setRole(updatedFields.activeMode);
+      }
+      localStorage.setItem('kshetra_user', JSON.stringify(merged));
+      finalUser = merged;
+      return merged;
+    });
+
+    const msg = (TRANSLATIONS[language] || TRANSLATIONS.en).profileUpdatedSuccess || 'Profile updated successfully!';
+    showToast(msg, 'success');
+    return finalUser;
+  };
+
+  const switchUserMode = (targetMode) => {
+    const nextMode = targetMode || (role === 'farmer' ? 'provider' : 'farmer');
+    setRole(nextMode);
+
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const updated = {
+        ...prev,
+        activeMode: nextMode,
+        role: nextMode,
+        isProviderEnabled: nextMode === 'provider' ? true : prev.isProviderEnabled
+      };
+      localStorage.setItem('kshetra_user', JSON.stringify(updated));
+      return updated;
+    });
+
+    const dict = TRANSLATIONS[language] || TRANSLATIONS.en;
+    const modeLabel = nextMode === 'farmer' ? dict.modeFarmerName : dict.modeProviderName;
+    const msg = (dict.modeSwitchedSuccess || 'Switched to {mode}').replace('{mode}', modeLabel);
+    showToast(msg, 'info');
+  };
+
+  const addMachineToProfile = (newMachine) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const currentMachines = prev.machines || [];
+      const updatedMachines = [newMachine, ...currentMachines];
+      const updated = { ...prev, machines: updatedMachines, isProviderEnabled: true };
+      localStorage.setItem('kshetra_user', JSON.stringify(updated));
+      return updated;
+    });
+    const dict = TRANSLATIONS[language] || TRANSLATIONS.en;
+    showToast(dict.equipmentListedToast || 'Equipment listed successfully!', 'success');
+  };
+
+  const removeMachineFromProfile = (machineId) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const updatedMachines = (prev.machines || []).filter((m) => m.id !== machineId);
+      const updated = { ...prev, machines: updatedMachines };
+      localStorage.setItem('kshetra_user', JSON.stringify(updated));
+      return updated;
+    });
+    const msg = language === 'mr' ? 'यंत्र काढून टाकले' : language === 'hi' ? 'मशीन हटा दी गई' : 'Machine removed';
+    showToast(msg, 'info');
+  };
+
+  const toggleMachineStatusInProfile = (machineId) => {
+    setCurrentUser((prev) => {
+      if (!prev) return prev;
+      const updatedMachines = (prev.machines || []).map((m) =>
+        m.id === machineId
+          ? { ...m, status: m.status === 'available' ? 'busy' : 'available' }
+          : m
+      );
+      const updated = { ...prev, machines: updatedMachines };
+      localStorage.setItem('kshetra_user', JSON.stringify(updated));
+      return updated;
+    });
+    const dict = TRANSLATIONS[language] || TRANSLATIONS.en;
+    showToast(dict.statusUpdatedToast || 'Status updated!', 'success');
   };
 
   const logoutUser = () => {
@@ -964,6 +1214,11 @@ export const LanguageProvider = ({ children }) => {
         currentUser,
         loginUser,
         logoutUser,
+        updateUserProfile,
+        switchUserMode,
+        addMachineToProfile,
+        removeMachineFromProfile,
+        toggleMachineStatusInProfile,
         authSkipped,
         skipAuth,
         resetAuthSkipped

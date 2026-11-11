@@ -28,7 +28,8 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
     selectedLocation, 
     setSelectedLocation,
     currentUser,
-    logoutUser
+    logoutUser,
+    switchUserMode
   } = useLanguage();
   
   const [showLocationMenu, setShowLocationMenu] = useState(false);
@@ -171,15 +172,15 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
             {currentUser ? (
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <button
-                  onClick={() => openAuthModal ? openAuthModal('profile') : (setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('auth'))}
+                  onClick={() => openAuthModal ? openAuthModal('profile') : (setIsAuthModalOpen ? setIsAuthModalOpen(true) : setActiveTab('profile'))}
                   className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-100 to-teal-100 hover:from-emerald-200 hover:to-teal-200 text-emerald-950 rounded-xl border border-emerald-300 text-xs sm:text-sm font-bold shadow-sm transition-all"
-                  title={`${currentUser.name} (${currentUser.role === 'farmer' ? t.roleFarmer : t.roleProvider})`}
+                  title={`${currentUser.name} (${currentUser.activeMode === 'farmer' ? t.roleFarmer : t.roleProvider})`}
                 >
-                  <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[10px] font-black shadow-inner">
-                    {currentUser.name ? currentUser.name.charAt(0) : '🌾'}
+                  <div className="w-5 h-5 rounded-full bg-emerald-800 text-white flex items-center justify-center text-[11px] font-black shadow-inner flex-shrink-0">
+                    {currentUser.avatar || (currentUser.name ? currentUser.name.charAt(0) : '🌾')}
                   </div>
                   <span className="truncate max-w-[75px] sm:max-w-[110px]">{currentUser.name}</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                  <span className={`w-2 h-2 rounded-full ${currentUser.activeMode === 'provider' ? 'bg-amber-500' : 'bg-emerald-600'} animate-pulse`} />
                 </button>
 
                 <button
@@ -219,7 +220,11 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
             <button
               onClick={() => {
                 const next = role === 'farmer' ? 'provider' : 'farmer';
-                setRole(next);
+                if (switchUserMode) {
+                  switchUserMode(next);
+                } else {
+                  setRole(next);
+                }
                 setActiveTab(next === 'provider' ? 'provider' : 'home');
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs border transition-all ${
@@ -306,14 +311,26 @@ export const Header = ({ activeTab, setActiveTab, setIsVoiceModalOpen, setIsAuth
 
           <button
             onClick={() => setActiveTab('provider')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors touch-target ml-auto ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors touch-target ${
               activeTab === 'provider'
                 ? 'bg-stone-800 text-white shadow-sm'
                 : 'text-stone-800 bg-stone-100 hover:bg-stone-200'
             }`}
           >
-            <UserCheck className="w-4 h-4" />
+            <Tractor className="w-4 h-4" />
             <span>{t.navProvider}</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('profile')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-colors touch-target ml-auto ${
+              activeTab === 'profile'
+                ? 'bg-gradient-to-r from-emerald-800 to-agri-950 text-white shadow-sm ring-1 ring-emerald-500'
+                : 'text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300'
+            }`}
+          >
+            <User className="w-4 h-4 text-emerald-700" />
+            <span>{t.myProfile}</span>
           </button>
         </nav>
       </div>

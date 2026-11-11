@@ -16,10 +16,20 @@ import { useLanguage } from '../context/LanguageContext';
 import { PROVIDER_SEED_REQUESTS } from '../data/seedData';
 
 export const ProviderDashboard = () => {
-  const { language, t, showToast } = useLanguage();
+  const { 
+    language, 
+    t, 
+    showToast, 
+    currentUser, 
+    addMachineToProfile, 
+    toggleMachineStatusInProfile,
+    switchUserMode 
+  } = useLanguage();
 
   const [requests, setRequests] = useState(PROVIDER_SEED_REQUESTS);
-  const [machines, setMachines] = useState([
+  
+  // Use machines from currentUser if available, else default
+  const defaultInitialMachines = [
     {
       id: 'm-1',
       name: 'Mahindra 575 DI (45 HP) + 7ft Rotavator',
@@ -38,7 +48,11 @@ export const ProviderDashboard = () => {
       jobsDone: 76,
       rating: 4.8
     }
-  ]);
+  ];
+
+  const machines = (currentUser?.machines && currentUser.machines.length > 0) 
+    ? currentUser.machines 
+    : defaultInitialMachines;
 
   const [showAddMachineModal, setShowAddMachineModal] = useState(false);
   const [newMachineName, setNewMachineName] = useState('');
@@ -60,14 +74,11 @@ export const ProviderDashboard = () => {
   };
 
   const toggleMachineStatus = (machineId) => {
-    setMachines((prev) =>
-      prev.map((m) =>
-        m.id === machineId
-          ? { ...m, status: m.status === 'available' ? 'busy' : 'available' }
-          : m
-      )
-    );
-    showToast(t.statusUpdatedToast, 'success');
+    if (toggleMachineStatusInProfile && currentUser) {
+      toggleMachineStatusInProfile(machineId);
+    } else {
+      showToast(t.statusUpdatedToast, 'success');
+    }
   };
 
   const handleAddMachine = (e) => {
@@ -75,16 +86,17 @@ export const ProviderDashboard = () => {
     const created = {
       id: `m-${Date.now()}`,
       name: newMachineName,
-      rate: newMachineRate,
+      rate: Number(newMachineRate) || 900,
       unitKey: newMachineUnitKey,
       status: 'available',
       jobsDone: 0,
       rating: 5.0
     };
-    setMachines([created, ...machines]);
+    if (addMachineToProfile && currentUser) {
+      addMachineToProfile(created);
+    }
     setShowAddMachineModal(false);
     setNewMachineName('');
-    showToast(t.equipmentListedToast, 'success');
   };
 
   const getUnitDisplay = (unitKey) => {
@@ -98,11 +110,20 @@ export const ProviderDashboard = () => {
       <div className="bg-gradient-to-r from-soil-900 via-stone-900 to-agri-950 text-white rounded-3xl p-5 sm:p-7 shadow-farmer-lg relative overflow-hidden border border-soil-700/50">
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
-            <span className="px-3 py-1 rounded-full text-xs font-black bg-harvest-500 text-gray-950 uppercase tracking-wide">
-              🚜 {t.providerHeader}
-            </span>
-            <h2 className="text-xl sm:text-3xl font-extrabold text-white mt-1 tracking-tight">
-              {t.providerWelcome}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-3 py-1 rounded-full text-xs font-black bg-harvest-500 text-gray-950 uppercase tracking-wide">
+                🚜 {t.providerHeader}
+              </span>
+              {currentUser && (
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white/15 text-soil-100 border border-white/20">
+                  {currentUser.isProviderEnabled ? t.dualModeBadge : t.registeredFarmer}
+                </span>
+              )}
+            </div>
+            <h2 className="text-xl sm:text-3xl font-extrabold text-white mt-1.5 tracking-tight">
+              {currentUser?.name 
+                ? `${currentUser.name} — ${currentUser.businessName || t.registeredProvider}` 
+                : t.providerWelcome}
             </h2>
             <p className="text-xs sm:text-sm text-soil-200 mt-1">
               {t.providerSubtitle}

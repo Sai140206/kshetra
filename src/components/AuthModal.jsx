@@ -24,6 +24,7 @@ import {
 import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
 import { AudioReadButton } from './AudioReadButton';
+import { UserProfile } from './UserProfile';
 
 export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPage = false, initialMode = 'login' }) => {
   const { 
@@ -212,121 +213,17 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
     if (onClose) onClose();
   };
 
-  // Content for when already logged in
+  // Content for when already logged in: Render rich Unified Dual-Mode User Profile
   if (currentUser) {
-    const locName = currentUser.location?.name?.[language] || currentUser.location?.name?.mr || selectedLocation.name[language] || selectedLocation.name.mr;
-    const isFarmerRole = currentUser.role === 'farmer';
-
     return (
-      <div className={isPage ? 'w-full max-w-2xl mx-auto py-6' : 'fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in'}>
-        <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl border border-emerald-200 overflow-hidden flex flex-col">
-          {/* Header */}
-          <div className="bg-gradient-to-r from-agri-900 to-emerald-950 text-white p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-harvest-600 text-gray-950 flex items-center justify-center font-black text-xl shadow-md">
-                {currentUser.name ? currentUser.name.charAt(0) : '🌾'}
-              </div>
-              <div>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-700/60 text-emerald-200 border border-emerald-500/30">
-                  {isFarmerRole ? t.registeredFarmer : t.registeredProvider}
-                </span>
-                <h3 className="text-lg font-black text-white mt-0.5 flex items-center gap-1.5">
-                  <span>{currentUser.name}</span>
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                </h3>
-              </div>
-            </div>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-
-          {/* Profile Card Body */}
-          <div className="p-5 sm:p-6 space-y-4">
-            {/* Digital Kisan Card */}
-            <div className="bg-gradient-to-br from-emerald-50 via-teal-50/50 to-white rounded-2xl p-4 border border-emerald-300 shadow-sm relative overflow-hidden">
-              <div className="absolute top-2 right-2 text-right">
-                <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-200/60 px-2 py-0.5 rounded-full border border-emerald-300">
-                  ID: {currentUser.id}
-                </span>
-              </div>
-
-              <div className="text-xs space-y-2 text-gray-700">
-                <div className="flex items-center gap-2 text-agri-950 font-bold text-sm">
-                  <User className="w-4 h-4 text-emerald-700" />
-                  <span>{currentUser.name}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-emerald-700" />
-                  <span className="font-semibold text-gray-900">+91 {currentUser.mobile}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-emerald-700" />
-                  <span className="font-semibold">{locName}</span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-emerald-200/80 text-xs">
-                  <div>
-                    <span className="text-gray-500 block text-[11px]">{t.landSize}:</span>
-                    <strong className="text-gray-900">{currentUser.landAcre} {language === 'mr' ? 'एकर' : language === 'hi' ? 'एकड़' : 'Acres'}</strong>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 block text-[11px]">{t.primaryCrop}:</span>
-                    <strong className="text-gray-900">{currentUser.primaryCrop}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 gap-3 text-center">
-              <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200">
-                <span className="block text-[11px] text-gray-500 font-bold uppercase">{t.activeBookingsAlert.split(':')[0]}</span>
-                <span className="text-xl font-black text-emerald-800">{farmerBookings.length}</span>
-              </div>
-              <div className="p-3 bg-gray-50 rounded-2xl border border-gray-200">
-                <span className="block text-[11px] text-gray-500 font-bold uppercase">{t.roleFarmer}</span>
-                <span className="text-xs font-black text-gray-800 mt-1 block">
-                  {currentUser.role === 'farmer' ? (language === 'mr' ? 'शेतकरी' : language === 'hi' ? 'किसान' : 'Farmer') : (language === 'mr' ? 'यंत्रमालक' : language === 'hi' ? 'मशीन मालिक' : 'Owner')}
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="space-y-2 pt-2">
-              <button
-                type="button"
-                onClick={() => {
-                  const nextRole = currentUser.role === 'farmer' ? 'provider' : 'farmer';
-                  const updated = { ...currentUser, role: nextRole };
-                  loginUser(updated);
-                  setRole(nextRole);
-                }}
-                className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-300 flex items-center justify-center gap-2 transition-colors"
-              >
-                <RefreshCw className="w-4 h-4 text-emerald-700" />
-                <span>{t.switchRole}: {currentUser.role === 'farmer' ? t.roleProvider : t.roleFarmer}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  logoutUser();
-                  if (onClose) onClose();
-                }}
-                className="w-full py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 flex items-center justify-center gap-2 transition-colors"
-              >
-                <LogOut className="w-4 h-4 text-rose-600" />
-                <span>{t.logout}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <UserProfile 
+        onClose={onClose} 
+        isPage={isPage} 
+        onNavigateTab={(tab) => {
+          if (onAuthSuccess) onAuthSuccess(currentUser);
+          if (onClose) onClose();
+        }} 
+      />
     );
   }
 
