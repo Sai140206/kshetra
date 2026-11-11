@@ -244,7 +244,14 @@ export const TRANSLATIONS = {
     resetPin: 'Reset with OTP',
     navAuth: 'Login / Sign Up',
     profileDetails: 'Farmer Identity & Land Details',
-    villageHub: 'Village / Hub'
+    villageHub: 'Village / Hub',
+    skip: 'Skip',
+    skipForNow: 'Skip for now',
+    continueAsGuest: 'Skip & Continue as Guest',
+    skipToHome: 'Skip to Home',
+    skipSubtitle: 'You can explore all farm machinery, transport pools, mandi rates & SOS mechanics without logging in.',
+    loginToContinue: 'Login or Sign Up to Continue',
+    guestModeNotice: 'Guest Mode: You can browse freely. Login anytime to book machinery or register equipment.'
   },
   mr: {
     appTitle: 'क्षेत्र (KSHETRA)',
@@ -486,7 +493,14 @@ export const TRANSLATIONS = {
     resetPin: 'OTP ने पिन बदला',
     navAuth: 'लॉगिन / साइन-अप',
     profileDetails: 'शेतकरी ओळख व शेतजमीन तपशील',
-    villageHub: 'गाव / तालुका'
+    villageHub: 'गाव / तालुका',
+    skip: 'पुढे जा (Skip)',
+    skipForNow: 'आता पुढे जा (Skip)',
+    continueAsGuest: 'अतिथी म्हणून ॲप वापरा (Skip)',
+    skipToHome: 'लॉगिन न करता पुढे जा',
+    skipSubtitle: 'आपण लॉगिन न करताही सर्व ट्रॅक्टर, कृषी अवजारे, बाजारभाव व मिस्त्री सेवा पाहू शकता.',
+    loginToContinue: 'ॲपमध्ये पुढे जाण्यासाठी लॉगिन किंवा नोंदणी करा',
+    guestModeNotice: 'अतिथी मोड: आपण ॲप सहज वापरू शकता. यंत्र बुकिंग किंवा नोंदणीसाठी केव्हाही लॉगिन करा.'
   },
   hi: {
     appTitle: 'क्षेत्र (KSHETRA)',
@@ -728,7 +742,14 @@ export const TRANSLATIONS = {
     resetPin: 'OTP से पिन बदलें',
     navAuth: 'लॉगिन / साइन-अप',
     profileDetails: 'किसान पहचान व कृषि भूमि विवरण',
-    villageHub: 'गांव / तहसील'
+    villageHub: 'गांव / तहसील',
+    skip: 'आगे बढ़ें (Skip)',
+    skipForNow: 'अभी छोड़ें (Skip)',
+    continueAsGuest: 'बिना लॉगिन अतिथि बनकर आगे बढ़ें (Skip)',
+    skipToHome: 'लॉगिन किए बिना आगे बढ़ें',
+    skipSubtitle: 'आप बिना लॉगिन के भी सभी ट्रैक्टर, कृषि यंत्र, मंडी भाव और मिस्त्री सेवा देख व उपयोग कर सकते हैं।',
+    loginToContinue: 'आगे बढ़ने के लिए लॉगिन या नया खाता बनाएं',
+    guestModeNotice: 'अतिथि मोड: आप ऐप का स्वतंत्र रूप से उपयोग कर सकते हैं। बुकिंग हेतु कभी भी लॉगिन करें।'
   }
 };
 
@@ -744,6 +765,10 @@ export const LanguageProvider = ({ children }) => {
   });
 
   const [role, setRole] = useState('farmer');
+  const [authSkipped, setAuthSkipped] = useState(() => {
+    return sessionStorage.getItem('kshetra_auth_skipped') === 'true';
+  });
+
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const savedUser = localStorage.getItem('kshetra_user');
@@ -762,9 +787,27 @@ export const LanguageProvider = ({ children }) => {
   const [toastMessage, setToastMessage] = useState(null);
   const [farmerBookings, setFarmerBookings] = useState([]);
 
+  const skipAuth = () => {
+    setAuthSkipped(true);
+    sessionStorage.setItem('kshetra_auth_skipped', 'true');
+    const note = language === 'mr' 
+      ? 'आपण अतिथी म्हणून ॲप वापरत आहात' 
+      : language === 'hi' 
+      ? 'आप बिना लॉगिन अतिथि मोड में हैं' 
+      : 'You are browsing in guest mode';
+    showToast(note, 'info');
+  };
+
+  const resetAuthSkipped = () => {
+    setAuthSkipped(false);
+    sessionStorage.removeItem('kshetra_auth_skipped');
+  };
+
   const loginUser = (userData) => {
     setCurrentUser(userData);
     localStorage.setItem('kshetra_user', JSON.stringify(userData));
+    setAuthSkipped(true);
+    sessionStorage.setItem('kshetra_auth_skipped', 'true');
     if (userData.role) {
       setRole(userData.role);
     }
@@ -779,6 +822,8 @@ export const LanguageProvider = ({ children }) => {
   const logoutUser = () => {
     setCurrentUser(null);
     localStorage.removeItem('kshetra_user');
+    setAuthSkipped(false);
+    sessionStorage.removeItem('kshetra_auth_skipped');
     const msg = language === 'mr' ? 'लॉगआउट यशस्वी!' : language === 'hi' ? 'लॉगआउट सफल!' : 'Logged out successfully';
     showToast(msg, 'info');
   };
@@ -918,7 +963,10 @@ export const LanguageProvider = ({ children }) => {
         addFarmerBooking,
         currentUser,
         loginUser,
-        logoutUser
+        logoutUser,
+        authSkipped,
+        skipAuth,
+        resetAuthSkipped
       }}
     >
       {children}

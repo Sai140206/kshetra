@@ -10,6 +10,7 @@ import { GramMechanicSOS } from './components/GramMechanicSOS';
 import { ProviderDashboard } from './components/ProviderDashboard';
 import { VaniVoiceModal } from './components/VaniVoiceModal';
 import { AuthModal } from './components/AuthModal';
+import { AuthGateway } from './components/AuthGateway';
 import { 
   Truck, 
   TrendingUp, 
@@ -20,7 +21,16 @@ import {
 } from 'lucide-react';
 
 const MainAppContent = () => {
-  const { language, t, toastMessage, farmerBookings, selectedLocation } = useLanguage();
+  const { 
+    language, 
+    t, 
+    toastMessage, 
+    farmerBookings, 
+    selectedLocation,
+    currentUser,
+    authSkipped,
+    skipAuth 
+  } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('home');
   const [activeCategory, setActiveCategory] = useState('all');
@@ -57,6 +67,27 @@ const MainAppContent = () => {
   const currentDistrict = typeof selectedLocation.district === 'object'
     ? (selectedLocation.district[language] || selectedLocation.district.mr)
     : selectedLocation.district;
+
+  // Initial Entry Gate: Show Auth Gateway before entering home page
+  if (!currentUser && !authSkipped) {
+    return (
+      <>
+        <AuthGateway 
+          onSkip={skipAuth} 
+          onAuthSuccess={() => {}} 
+        />
+        {/* Toast Notification Container */}
+        {toastMessage && (
+          <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-5">
+            <div className="px-4 py-2.5 rounded-2xl shadow-xl bg-gray-900 text-white text-xs sm:text-sm font-bold flex items-center gap-2 border border-gray-700">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span>{toastMessage.message}</span>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#F8FAF6] text-gray-900 flex flex-col antialiased">
@@ -308,6 +339,7 @@ const MainAppContent = () => {
         isOpen={isAuthModalOpen}
         initialMode={authModalMode}
         onClose={() => setIsAuthModalOpen(false)}
+        onSkip={() => setIsAuthModalOpen(false)}
         onAuthSuccess={() => setIsAuthModalOpen(false)}
       />
 

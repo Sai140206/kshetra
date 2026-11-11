@@ -25,7 +25,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
 import { AudioReadButton } from './AudioReadButton';
 
-export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = false, initialMode = 'login' }) => {
+export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPage = false, initialMode = 'login' }) => {
   const { 
     language, 
     t, 
@@ -363,6 +363,17 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = fals
                 label={t.listen}
                 className="bg-amber-400 hover:bg-amber-300 text-gray-950 font-black shadow-sm text-xs py-1 px-2.5"
               />
+              {onSkip && (
+                <button
+                  type="button"
+                  onClick={onSkip}
+                  className="flex items-center gap-1 px-2.5 py-1 bg-white/20 hover:bg-white/30 text-white rounded-xl text-xs font-bold transition-all border border-white/25 active:scale-95 shadow-sm"
+                  title={t.skipForNow}
+                >
+                  <span>{t.skip}</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              )}
               {onClose && !isPage && (
                 <button
                   onClick={onClose}
@@ -651,6 +662,23 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = fals
                 </div>
               </div>
 
+              {/* Skip Option in Login Form */}
+              {onSkip && (
+                <div className="pt-2 text-center border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={onSkip}
+                    className="w-full py-2.5 px-3 rounded-2xl bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-emerald-300 transition-colors shadow-sm"
+                  >
+                    <span>{t.continueAsGuest}</span>
+                    <ArrowRight className="w-4 h-4 text-emerald-700" />
+                  </button>
+                  <p className="text-[10px] sm:text-[11px] text-gray-500 mt-1">
+                    {t.skipSubtitle}
+                  </p>
+                </div>
+              )}
+
             </form>
           )}
 
@@ -823,6 +851,23 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, isPage = fals
                 <CheckCircle2 className="w-5 h-5 text-amber-300" />
                 <span>{t.createAccount}</span>
               </button>
+
+              {/* Skip Option in Sign Up Form */}
+              {onSkip && (
+                <div className="pt-2 text-center border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={onSkip}
+                    className="w-full py-2.5 px-3 rounded-2xl bg-emerald-50/80 hover:bg-emerald-100 text-emerald-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-1.5 border border-emerald-300 transition-colors shadow-sm"
+                  >
+                    <span>{t.continueAsGuest}</span>
+                    <ArrowRight className="w-4 h-4 text-emerald-700" />
+                  </button>
+                  <p className="text-[10px] sm:text-[11px] text-gray-500 mt-1">
+                    {t.skipSubtitle}
+                  </p>
+                </div>
+              )}
 
             </form>
           )}
