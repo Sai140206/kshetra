@@ -13,7 +13,8 @@ import {
   Check,
   User,
   ShieldCheck,
-  LogOut
+  LogOut,
+  Tractor
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
