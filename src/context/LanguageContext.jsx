@@ -1,5 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { LOCATIONS } from '../data/seedData';
+import { 
+  isFirebaseConfigured, 
+  saveUserProfile, 
+  createBookingInFirestore, 
+  subscribeUserBookings, 
+  logOutFromFirebase 
+} from '../services/firebase';
 
 const LanguageContext = createContext();
 
@@ -980,6 +987,12 @@ export const LanguageProvider = ({ children }) => {
     sessionStorage.setItem('kshetra_auth_skipped', 'true');
     setRole(enrichedUser.activeMode);
 
+    if (isFirebaseConfigured && enrichedUser.id) {
+      saveUserProfile(enrichedUser.id, enrichedUser).catch((err) =>
+        console.warn('Firestore profile persist:', err)
+      );
+    }
+
     const welcome = language === 'mr' 
       ? `स्वागत आहे, ${enrichedUser.name}! क्षेत्र एकात्मिक शेतकरी खात्यात आपले स्वागत आहे.`
       : language === 'hi'
@@ -1003,6 +1016,13 @@ export const LanguageProvider = ({ children }) => {
 
     const msg = (TRANSLATIONS[language] || TRANSLATIONS.en).profileUpdatedSuccess || 'Profile updated successfully!';
     showToast(msg, 'success');
+
+    if (isFirebaseConfigured && finalUser?.id) {
+      saveUserProfile(finalUser.id, finalUser).catch((err) =>
+        console.warn('Firestore profile update sync:', err)
+      );
+    }
+
     return finalUser;
   };
 
@@ -1070,6 +1090,7 @@ export const LanguageProvider = ({ children }) => {
   };
 
   const logoutUser = () => {
+    logOutFromFirebase().catch(() => {});
     setCurrentUser(null);
     localStorage.removeItem('kshetra_user');
     setAuthSkipped(false);
@@ -1179,8 +1200,36 @@ export const LanguageProvider = ({ children }) => {
     }, 3500);
   };
 
+  // Synchronize bookings with Firestore when logged in
+  useEffect(() => {
+    if (!currentUser?.id || !isFirebaseConfigured) return;
+    const unsubscribe = subscribeUserBookings(currentUser.id, (remoteBookings) => {
+      if (remoteBookings && remoteBookings.length > 0) {
+        setFarmerBookings((prev) => {
+          const existingIds = new Set(prev.map((b) => b.id));
+          const freshBookings = remoteBookings.filter((b) => !existingIds.has(b.id));
+          return [...freshBookings, ...prev];
+        });
+      }
+    });
+    return () => unsubscribe && unsubscribe();
+  }, [currentUser?.id]);
+
   const addFarmerBooking = (booking) => {
-    setFarmerBookings((prev) => [booking, ...prev]);
+    const bookingWithUser = {
+      ...booking,
+      userId: currentUser?.id || 'guest',
+      userName: currentUser?.name || 'Farmer',
+      userMobile: currentUser?.mobile || ''
+    };
+    setFarmerBookings((prev) => [bookingWithUser, ...prev]);
+
+    if (isFirebaseConfigured) {
+      createBookingInFirestore(bookingWithUser).catch((err) =>
+        console.warn('Firestore booking persist:', err)
+      );
+    }
+
     showToast(
       language === 'mr'
         ? `बुकिंग यशस्वी! कोड: ${booking.id}`

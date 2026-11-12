@@ -25,6 +25,13 @@ import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
 import { AudioReadButton } from './AudioReadButton';
 import { UserProfile } from './UserProfile';
+import { 
+  isFirebaseConfigured, 
+  setupRecaptcha, 
+  sendPhoneOtp, 
+  getUserProfile, 
+  saveUserProfile 
+} from '../services/firebase';
 
 export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPage = false, initialMode = 'login' }) => {
   const { 
@@ -60,6 +67,10 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
   const [otpValue, setOtpValue] = useState('');
   const [otpTimer, setOtpTimer] = useState(0);
   const [simulatedSmsBanner, setSimulatedSmsBanner] = useState('');
+  const [confirmationResult, setConfirmationResult] = useState(null);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [firebaseError, setFirebaseError] = useState('');
 
   // Sign Up Form State
   const [signupName, setSignupName] = useState('');
@@ -85,12 +96,57 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
   if (!isOpen && !isPage) return null;
 
   // Handle Send OTP
-  const handleSendOtp = (e) => {
+  const handleSendOtp = async (e) => {
     e?.preventDefault();
+    setFirebaseError('');
     if (!mobile || mobile.length < 10) {
       alert(language === 'mr' ? 'कृपया वैध १० अंकी मोबाईल नंबर टाका' : language === 'hi' ? 'कृपया सही 10 अंकों का मोबाइल नंबर दर्ज करें' : 'Please enter valid 10-digit mobile number');
       return;
     }
+
+    if (isFirebaseConfigured) {
+      setIsSendingOtp(true);
+      try {
+        const appVerifier = setupRecaptcha('recaptcha-container');
+        const formattedPhone = `+91${mobile.trim()}`;
+        const confirmation = await sendPhoneOtp(formattedPhone, appVerifier);
+        setConfirmationResult(confirmation);
+        setOtpSent(true);
+        setOtpTimer(60);
+        setOtpValue('');
+        const sms = language === 'mr'
+          ? `[Firebase SMS] आपल्या +91 ${mobile} मोबाईलवर खरा OTP पाठवला गेला आहे.`
+          : language === 'hi'
+          ? `[Firebase SMS] आपके +91 ${mobile} नंबर पर वास्तविक OTP भेजा गया है।`
+          : `[Firebase SMS] Real OTP code has been dispatched to +91 ${mobile}.`;
+        setSimulatedSmsBanner(sms);
+      } catch (err) {
+        console.warn('Firebase Phone Auth attempt:', err);
+        let errorMsg = err.message || 'Failed to send OTP via SMS';
+        if (err.code === 'auth/invalid-phone-number') {
+          errorMsg = language === 'mr' ? 'अवैध फोन नंबर.' : language === 'hi' ? 'अमान्य फोन नंबर।' : 'Invalid phone number format.';
+        } else if (err.code === 'auth/too-many-requests') {
+          errorMsg = language === 'mr' ? 'खूप प्रयत्न केले. कृपया थोड्या वेळाने प्रयत्न करा.' : language === 'hi' ? 'बहुत सारे प्रयास। कृपया थोड़ी देर बाद पुनः प्रयास करें।' : 'Too many attempts. Please try again later.';
+        } else if (err.code === 'auth/quota-exceeded') {
+          errorMsg = language === 'mr' ? 'SMS मर्यादा संपली. चाचणीसाठी १२३४ वापरा.' : language === 'hi' ? 'SMS कोटा समाप्त। टेस्ट हेतु 1234 का उपयोग करें।' : 'SMS quota exceeded. Use demo OTP 1234.';
+        }
+        setFirebaseError(errorMsg);
+        // Fallback to simulated OTP
+        setOtpSent(true);
+        setOtpTimer(45);
+        setOtpValue('');
+        const fallbackSms = language === 'mr'
+          ? `[फॉलबॅक SMS] चाचणीसाठी OTP १२३४ (1234) वापरा.`
+          : language === 'hi'
+          ? `[फ़ॉलबैक SMS] टेस्ट हेतु OTP 1234 का उपयोग करें।`
+          : `[Fallback SMS] Test demo OTP is 1234.`;
+        setSimulatedSmsBanner(fallbackSms);
+      } finally {
+        setIsSendingOtp(false);
+      }
+      return;
+    }
+
     setOtpSent(true);
     setOtpTimer(45);
     setOtpValue('');
@@ -104,13 +160,63 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
 
   // Auto-fill demo OTP
   const handleFillDemoOtp = () => {
-    setOtpValue('1234');
+    setOtpValue(confirmationResult ? '123456' : '1234');
   };
 
   // Handle Login Submission
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    setFirebaseError('');
+
     if (loginMethod === 'otp') {
+      if (confirmationResult) {
+        setIsVerifyingOtp(true);
+        try {
+          const result = await confirmationResult.confirm(otpValue);
+          const firebaseUser = result.user;
+          const uid = firebaseUser.uid;
+          const phone = firebaseUser.phoneNumber || `+91${mobile}`;
+
+          // Check if user has an existing profile in Firestore
+          let profile = await getUserProfile(uid);
+
+          if (!profile) {
+            const loc = LOCATIONS.find((l) => l.id === selectedLocation.id) || LOCATIONS[0];
+            profile = {
+              id: uid,
+              uid: uid,
+              name: language === 'mr' ? 'शेतकरी' : language === 'hi' ? 'किसान' : 'Kisan Farmer',
+              mobile: mobile || phone.replace('+91', ''),
+              role: 'farmer',
+              location: loc,
+              landAcre: '3.5',
+              primaryCrop: language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane',
+              joinedDate: new Date().toISOString().split('T')[0],
+              isVerified: true
+            };
+            await saveUserProfile(uid, profile);
+          }
+
+          loginUser(profile);
+          if (onAuthSuccess) onAuthSuccess(profile);
+          if (onClose) onClose();
+          return;
+        } catch (err) {
+          console.error('Firebase OTP verify error:', err);
+          setFirebaseError(
+            language === 'mr' 
+              ? 'अवैध OTP! कृपया SMS तपासून पुन्हा टाका.' 
+              : language === 'hi' 
+              ? 'अमान्य OTP! कृपया SMS देखकर पुनः दर्ज करें।' 
+              : 'Invalid OTP code. Please check your SMS and retry.'
+          );
+          setIsVerifyingOtp(false);
+          return;
+        } finally {
+          setIsVerifyingOtp(false);
+        }
+      }
+
       if (otpValue !== '1234') {
         alert(language === 'mr' ? 'अवैध OTP! चाचणीसाठी १२३४ (1234) वापरा.' : language === 'hi' ? 'अमान्य OTP! टेस्ट के लिए 1234 दर्ज करें।' : 'Invalid OTP! Please use 1234 for testing.');
         return;
@@ -136,6 +242,10 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       joinedDate: '2026-03-15',
       isVerified: true
     };
+
+    if (isFirebaseConfigured) {
+      saveUserProfile(user.id, user).catch(() => {});
+    }
 
     loginUser(user);
     if (onAuthSuccess) onAuthSuccess(user);
@@ -204,9 +314,13 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       location: loc,
       landAcre: signupLandAcre || '2.0',
       primaryCrop: signupCrop || 'कांदा / Onion',
-      joinedDate: '2026-09-30',
+      joinedDate: new Date().toISOString().split('T')[0],
       isVerified: true
     };
+
+    if (isFirebaseConfigured) {
+      saveUserProfile(newUser.id, newUser).catch(() => {});
+    }
 
     loginUser(newUser);
     if (onAuthSuccess) onAuthSuccess(newUser);
@@ -321,26 +435,40 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
         {/* Scrollable Form Body */}
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
           
+          {/* Firebase / Auth Error Banner */}
+          {firebaseError && (
+            <div className="bg-red-50 border border-red-300 rounded-2xl p-3 text-xs text-red-800 animate-in fade-in flex items-start gap-2 shadow-sm">
+              <span className="text-base leading-none">⚠️</span>
+              <div className="flex-1 font-medium leading-relaxed">
+                {firebaseError}
+              </div>
+            </div>
+          )}
+
           {/* Simulated SMS Alert Banner when OTP is sent */}
           {otpSent && simulatedSmsBanner && (
             <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 text-xs text-amber-950 animate-in slide-in-from-top-2 shadow-sm space-y-1.5">
               <div className="flex items-center justify-between font-bold text-amber-900">
                 <span className="flex items-center gap-1">
                   <Smartphone className="w-4 h-4 text-amber-700" />
-                  <span>{language === 'mr' ? 'प्राप्त झालेला SMS (चाचणी संदेश):' : language === 'hi' ? 'प्राप्त SMS (टेस्ट मैसेज):' : 'Received SMS (Test Simulation):'}</span>
+                  <span>{confirmationResult ? 'SMS Dispatch Status:' : (language === 'mr' ? 'प्राप्त झालेला SMS (चाचणी संदेश):' : language === 'hi' ? 'प्राप्त SMS (टेस्ट मैसेज):' : 'Received SMS (Test Simulation):')}</span>
                 </span>
-                <span className="bg-amber-200 text-amber-950 px-1.5 py-0.5 rounded text-[10px] font-mono">
-                  OTP: 1234
+                <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                  confirmationResult ? 'bg-emerald-200 text-emerald-900' : 'bg-amber-200 text-amber-950'
+                }`}>
+                  {confirmationResult ? 'Firebase Live SMS' : 'OTP: 1234'}
                 </span>
               </div>
               <p className="font-semibold text-gray-800 italic">"{simulatedSmsBanner}"</p>
-              <button
-                type="button"
-                onClick={handleFillDemoOtp}
-                className="w-full py-1.5 bg-amber-400 hover:bg-amber-500 text-gray-950 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-1 shadow-sm mt-1"
-              >
-                <span>⚡ {t.fillDemoOtp}</span>
-              </button>
+              {!confirmationResult && (
+                <button
+                  type="button"
+                  onClick={handleFillDemoOtp}
+                  className="w-full py-1.5 bg-amber-400 hover:bg-amber-500 text-gray-950 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-1 shadow-sm mt-1"
+                >
+                  <span>⚡ {t.fillDemoOtp}</span>
+                </button>
+              )}
             </div>
           )}
 
@@ -403,21 +531,34 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
               {/* METHOD 1: OTP FLOW */}
               {loginMethod === 'otp' && (
                 <div>
+                  {/* Invisible reCAPTCHA container */}
+                  <div id="recaptcha-container" className="my-1 flex justify-center"></div>
+
                   {!otpSent ? (
                     <button
                       type="button"
+                      disabled={isSendingOtp}
                       onClick={handleSendOtp}
-                      className="w-full py-3 bg-gradient-to-r from-emerald-700 to-agri-900 hover:from-emerald-800 hover:to-agri-950 text-white rounded-2xl font-black text-sm shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-3 bg-gradient-to-r from-emerald-700 to-agri-900 hover:from-emerald-800 hover:to-agri-950 text-white rounded-2xl font-black text-sm shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
                     >
-                      <span>{t.sendOtp}</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {isSendingOtp ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin text-amber-300" />
+                          <span>{language === 'mr' ? 'SMS पाठवत आहे...' : language === 'hi' ? 'SMS भेज रहे हैं...' : 'Sending SMS OTP...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>{t.sendOtp}</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </>
+                      )}
                     </button>
                   ) : (
                     <div className="space-y-3 pt-1">
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <label className="text-xs font-bold text-gray-700 uppercase">
-                            🔑 {t.enterOtp}
+                            🔑 {t.enterOtp} ({confirmationResult ? '6 Digits' : '4 Digits'})
                           </label>
                           <span className="text-[11px] font-bold text-emerald-800">
                             {t.otpSentTo} {mobile}
@@ -425,10 +566,10 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
                         </div>
                         <input
                           type="text"
-                          maxLength={4}
+                          maxLength={confirmationResult ? 6 : 4}
                           value={otpValue}
                           onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
-                          placeholder="• • • •"
+                          placeholder={confirmationResult ? '• • • • • •' : '• • • •'}
                           autoFocus
                           required
                           className="w-full py-2.5 text-center text-xl font-mono font-black tracking-widest bg-emerald-50/50 border-2 border-emerald-400 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
@@ -444,16 +585,20 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
                         ) : (
                           <button
                             type="button"
+                            disabled={isSendingOtp}
                             onClick={handleSendOtp}
-                            className="font-bold text-emerald-800 hover:underline"
+                            className="font-bold text-emerald-800 hover:underline disabled:opacity-50"
                           >
-                            {t.resendNow}
+                            {isSendingOtp ? 'Sending...' : t.resendNow}
                           </button>
                         )}
 
                         <button
                           type="button"
-                          onClick={() => setOtpSent(false)}
+                          onClick={() => {
+                            setOtpSent(false);
+                            setConfirmationResult(null);
+                          }}
                           className="text-gray-500 hover:text-gray-700 text-xs"
                         >
                           {language === 'mr' ? 'नंबर बदला' : language === 'hi' ? 'नंबर बदलें' : 'Change Number'}
@@ -462,10 +607,20 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
 
                       <button
                         type="submit"
-                        className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-agri-900 hover:from-emerald-700 hover:to-agri-950 text-white rounded-2xl font-black text-sm sm:text-base shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2"
+                        disabled={isVerifyingOtp}
+                        className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-agri-900 hover:from-emerald-700 hover:to-agri-950 text-white rounded-2xl font-black text-sm sm:text-base shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
                       >
-                        <CheckCircle2 className="w-5 h-5 text-amber-300" />
-                        <span>{t.verifyAndLogin}</span>
+                        {isVerifyingOtp ? (
+                          <>
+                            <RefreshCw className="w-5 h-5 animate-spin text-amber-300" />
+                            <span>{language === 'mr' ? 'पडताळणी करत आहे...' : language === 'hi' ? 'सत्यापन हो रहा है...' : 'Verifying OTP...'}</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="w-5 h-5 text-amber-300" />
+                            <span>{t.verifyAndLogin}</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   )}
