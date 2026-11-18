@@ -3,6 +3,7 @@ import {
   User, 
   Phone, 
   Lock, 
+  Mail,
   Eye, 
   EyeOff, 
   CheckCircle2, 
@@ -29,6 +30,9 @@ import {
   isFirebaseConfigured, 
   setupRecaptcha, 
   sendPhoneOtp, 
+  signInWithEmail,
+  signUpWithEmail,
+  sendPasswordReset,
   getUserProfile, 
   saveUserProfile 
 } from '../services/firebase';
@@ -62,6 +66,13 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
   const [pin, setPin] = useState('');
   const [showPin, setShowPin] = useState(false);
   
+  // Email Login State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoggingInWithEmail, setIsLoggingInWithEmail] = useState(false);
+  const [resetSuccessMessage, setResetSuccessMessage] = useState('');
+
   // OTP Flow State
   const [otpSent, setOtpSent] = useState(false);
   const [otpValue, setOtpValue] = useState('');
@@ -75,12 +86,16 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
   // Sign Up Form State
   const [signupName, setSignupName] = useState('');
   const [signupMobile, setSignupMobile] = useState('');
+  const [signupEmail, setSignupEmail] = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupShowPassword, setSignupShowPassword] = useState(false);
   const [signupRole, setSignupRole] = useState('farmer'); // 'farmer' | 'provider'
   const [signupLocationId, setSignupLocationId] = useState(selectedLocation.id);
   const [signupLandAcre, setSignupLandAcre] = useState('3.5');
   const [signupCrop, setSignupCrop] = useState(language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane');
   const [signupPin, setSignupPin] = useState('');
   const [signupShowPin, setSignupShowPin] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   // Countdown timer for OTP
   useEffect(() => {
@@ -154,11 +169,157 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
     }
   };
 
-  // Handle Login Submission (Real Firebase OTP only)
+  // Handle Password Reset Email
+  const handleForgotPassword = async () => {
+    setFirebaseError('');
+    setResetSuccessMessage('');
+    if (!email || !email.includes('@')) {
+      alert(
+        language === 'mr'
+          ? 'कृपया आधी आपला ईमेल आयडी टाका.'
+          : language === 'hi'
+          ? 'कृपया पहले अपना ईमेल पता दर्ज करें।'
+          : 'Please enter your email address to receive password reset link.'
+      );
+      return;
+    }
+
+    try {
+      if (isFirebaseConfigured) {
+        await sendPasswordReset(email);
+      }
+      setResetSuccessMessage(
+        language === 'mr'
+          ? `पासवर्ड रीसेट लिंक ${email} वर पाठवली आहे. कृपया इनबॉक्स तपासा.`
+          : language === 'hi'
+          ? `पासवर्ड रीसेट लिंक ${email} पर भेज दी गई है। कृपया इनबॉक्स चेक करें।`
+          : `Password reset link dispatched to ${email}. Please check your inbox.`
+      );
+    } catch (err) {
+      console.error('Firebase password reset error:', err);
+      let errorMsg = err.message || 'Failed to send password reset email';
+      if (err.code === 'auth/user-not-found') {
+        errorMsg = language === 'mr'
+          ? 'या ईमेल आयडीने कोणतेही खाते नोंदणीकृत नाही.'
+          : language === 'hi'
+          ? 'इस ईमेल से कोई पंजीकृत खाता नहीं मिला।'
+          : 'No registered account found with this email address.';
+      }
+      setFirebaseError(errorMsg);
+    }
+  };
+
+  // Handle Login Submission (OTP, Email, or PIN)
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setFirebaseError('');
+    setResetSuccessMessage('');
 
+    // METHOD A: EMAIL LOGIN
+    if (loginMethod === 'email') {
+      if (!email || !email.includes('@')) {
+        setFirebaseError(
+          language === 'mr' 
+            ? 'कृपया वैध ईमेल आयडी टाका.' 
+            : language === 'hi' 
+            ? 'कृपया सही ईमेल पता दर्ज करें।' 
+            : 'Please enter a valid email address.'
+        );
+        return;
+      }
+
+      if (!password || password.length < 6) {
+        setFirebaseError(
+          language === 'mr' 
+            ? 'पासवर्ड किमान ६ अक्षरांचा असावा.' 
+            : language === 'hi' 
+            ? 'पासवर्ड कम से कम 6 अक्षरों का होना चाहिए।' 
+            : 'Password must be at least 6 characters.'
+        );
+        return;
+      }
+
+      setIsLoggingInWithEmail(true);
+      try {
+        if (isFirebaseConfigured) {
+          const cred = await signInWithEmail(email, password);
+          const firebaseUser = cred.user;
+          const uid = firebaseUser.uid;
+
+          // Fetch user profile from Firestore or initialize default
+          let profile = await getUserProfile(uid);
+          if (!profile) {
+            const loc = LOCATIONS.find((l) => l.id === selectedLocation.id) || LOCATIONS[0];
+            profile = {
+              id: uid,
+              uid: uid,
+              name: firebaseUser.displayName || email.split('@')[0],
+              email: email.trim(),
+              mobile: firebaseUser.phoneNumber ? firebaseUser.phoneNumber.replace('+91', '') : '',
+              role: 'farmer',
+              location: loc,
+              landAcre: '3.5',
+              primaryCrop: language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane',
+              joinedDate: new Date().toISOString().split('T')[0],
+              isVerified: true
+            };
+            await saveUserProfile(uid, profile);
+          }
+
+          loginUser(profile);
+          if (onAuthSuccess) onAuthSuccess(profile);
+          if (onClose) onClose();
+          return;
+        } else {
+          // Demo / fallback offline mode
+          const loc = LOCATIONS.find((l) => l.id === selectedLocation.id) || LOCATIONS[0];
+          const demoEmailUser = {
+            id: `usr-${Date.now().toString().slice(-4)}`,
+            name: email.split('@')[0],
+            email: email.trim(),
+            mobile: '9822012345',
+            role: 'farmer',
+            location: loc,
+            landAcre: '4.0',
+            primaryCrop: language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane',
+            joinedDate: new Date().toISOString().split('T')[0],
+            isVerified: true
+          };
+          loginUser(demoEmailUser);
+          if (onAuthSuccess) onAuthSuccess(demoEmailUser);
+          if (onClose) onClose();
+          return;
+        }
+      } catch (err) {
+        console.error('Firebase Email sign in error:', err);
+        let errorMsg = err.message || 'Failed to sign in with email';
+        if (
+          err.code === 'auth/user-not-found' || 
+          err.code === 'auth/wrong-password' || 
+          err.code === 'auth/invalid-credential'
+        ) {
+          errorMsg = language === 'mr'
+            ? 'ईमेल आयडी किंवा पासवर्ड चुकीचा आहे. कृपया तपासून पुन्हा प्रयत्न करा.'
+            : language === 'hi'
+            ? 'ईमेल या पासवर्ड गलत है। कृपया पुनः प्रयास करें।'
+            : 'Invalid email or password. Please verify and try again.';
+        } else if (err.code === 'auth/invalid-email') {
+          errorMsg = language === 'mr' ? 'अवैध ईमेल स्वरूप.' : language === 'hi' ? 'अमान्य ईमेल प्रारूप।' : 'Invalid email format.';
+        } else if (err.code === 'auth/operation-not-allowed') {
+          errorMsg = language === 'mr'
+            ? 'Firebase Console मध्ये Email/Password प्रमाणीकरण सक्षम नाही. कृपया Authentication -> Sign-in method मध्ये सक्षम करा.'
+            : language === 'hi'
+            ? 'Firebase Console में Email/Password प्रमाणीकरण सक्षम नहीं है। कृपया Authentication -> Sign-in method में सक्षम करें।'
+            : 'Email/Password Authentication is not enabled in Firebase Console.';
+        }
+        setFirebaseError(errorMsg);
+        return;
+      } finally {
+        setIsLoggingInWithEmail(false);
+      }
+    }
+
+    // METHOD B: PHONE OTP FLOW
     if (loginMethod === 'otp') {
       if (!confirmationResult) {
         setFirebaseError(
@@ -267,6 +428,7 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       demoUser = {
         id: 'usr-9822',
         name: language === 'mr' ? 'रमेश पाटील' : language === 'hi' ? 'रमेश पाटिल' : 'Ramesh Patil',
+        email: 'ramesh.patil@kshetra.agri',
         mobile: '9822012345',
         role: 'farmer',
         location: loc,
@@ -281,6 +443,7 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       demoUser = {
         id: 'usr-5412',
         name: language === 'mr' ? 'ज्ञानेश्वर जाधव' : language === 'hi' ? 'ज्ञानेश्वर जाधव' : 'Dnyaneshwar Jadhav',
+        email: 'dnyaneshwar.jadhav@kshetra.agri',
         mobile: '9822054123',
         role: 'provider',
         location: loc,
@@ -298,8 +461,9 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
   };
 
   // Handle Sign Up Submission
-  const handleSignupSubmit = (e) => {
+  const handleSignupSubmit = async (e) => {
     e.preventDefault();
+    setFirebaseError('');
     if (!signupName.trim()) {
       alert(language === 'mr' ? 'कृपया आपले पूर्ण नाव टाका' : language === 'hi' ? 'कृपया अपना पूरा नाम दर्ज करें' : 'Please enter full name');
       return;
@@ -308,29 +472,66 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       alert(language === 'mr' ? 'कृपया १०-अंकी मोबाईल नंबर टाका' : language === 'hi' ? 'कृपया 10-अंकीय मोबाइल नंबर दर्ज करें' : 'Please enter 10-digit mobile number');
       return;
     }
+    if (signupEmail && !signupEmail.includes('@')) {
+      alert(language === 'mr' ? 'कृपया वैध ईमेल आयडी टाका' : language === 'hi' ? 'कृपया सही ईमेल पता दर्ज करें' : 'Please enter valid email address');
+      return;
+    }
 
+    setIsSigningUp(true);
     const loc = LOCATIONS.find((l) => l.id === signupLocationId) || selectedLocation;
     setSelectedLocation(loc);
 
-    const newUser = {
-      id: `usr-${Date.now().toString().slice(-4)}`,
-      name: signupName.trim(),
-      mobile: signupMobile,
-      role: signupRole,
-      location: loc,
-      landAcre: signupLandAcre || '2.0',
-      primaryCrop: signupCrop || 'कांदा / Onion',
-      joinedDate: new Date().toISOString().split('T')[0],
-      isVerified: true
-    };
+    try {
+      let uid = `usr-${Date.now().toString().slice(-4)}`;
 
-    if (isFirebaseConfigured) {
-      saveUserProfile(newUser.id, newUser).catch(() => {});
+      // If user provided email and password, register in Firebase Auth
+      if (isFirebaseConfigured && signupEmail && signupPassword) {
+        try {
+          const userCred = await signUpWithEmail(signupEmail, signupPassword);
+          uid = userCred.user.uid;
+        } catch (authErr) {
+          console.warn('Firebase email signup warning:', authErr);
+          if (authErr.code === 'auth/email-already-in-use') {
+            setFirebaseError(
+              language === 'mr'
+                ? 'हा ईमेल आयडी आधीच नोंदणीकृत आहे. कृपया लॉगिन करा.'
+                : language === 'hi'
+                ? 'यह ईमेल पहले से पंजीकृत है। कृपया लॉगिन करें।'
+                : 'This email is already registered. Please login.'
+            );
+            setIsSigningUp(false);
+            return;
+          }
+        }
+      }
+
+      const newUser = {
+        id: uid,
+        uid: uid,
+        name: signupName.trim(),
+        mobile: signupMobile,
+        email: signupEmail ? signupEmail.trim() : '',
+        role: signupRole,
+        location: loc,
+        landAcre: signupLandAcre || '2.0',
+        primaryCrop: signupCrop || 'कांदा / Onion',
+        joinedDate: new Date().toISOString().split('T')[0],
+        isVerified: true
+      };
+
+      if (isFirebaseConfigured) {
+        await saveUserProfile(newUser.id, newUser).catch(() => {});
+      }
+
+      loginUser(newUser);
+      if (onAuthSuccess) onAuthSuccess(newUser);
+      if (onClose) onClose();
+    } catch (err) {
+      console.error('Sign up error:', err);
+      setFirebaseError(err.message || 'Failed to complete registration');
+    } finally {
+      setIsSigningUp(false);
     }
-
-    loginUser(newUser);
-    if (onAuthSuccess) onAuthSuccess(newUser);
-    if (onClose) onClose();
   };
 
   // Content for when already logged in: Render rich Unified Dual-Mode User Profile
@@ -473,57 +674,168 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
           {authMode === 'login' && (
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               
-              {/* Method Toggle: OTP vs Kisan PIN */}
-              <div className="flex items-center justify-center gap-2 p-1 bg-gray-100 rounded-2xl border border-gray-200 text-xs">
+              {/* Method Toggle: OTP vs Email vs Kisan PIN */}
+              <div className="grid grid-cols-3 gap-1 p-1 bg-gray-100 rounded-2xl border border-gray-200 text-xs">
                 <button
                   type="button"
                   onClick={() => {
                     setLoginMethod('otp');
                     setOtpSent(false);
+                    setFirebaseError('');
+                    setResetSuccessMessage('');
                   }}
-                  className={`flex-1 py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+                  className={`py-2 px-1 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
                     loginMethod === 'otp'
                       ? 'bg-emerald-800 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <Smartphone className="w-3.5 h-3.5" />
-                  <span>{t.loginWithOtp}</span>
+                  <Smartphone className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{t.loginWithOtp}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLoginMethod('pin')}
-                  className={`flex-1 py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+                  onClick={() => {
+                    setLoginMethod('email');
+                    setFirebaseError('');
+                    setResetSuccessMessage('');
+                  }}
+                  className={`py-2 px-1 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
+                    loginMethod === 'email'
+                      ? 'bg-emerald-800 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  <Mail className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{t.loginWithEmail}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setLoginMethod('pin');
+                    setFirebaseError('');
+                    setResetSuccessMessage('');
+                  }}
+                  className={`py-2 px-1 rounded-xl font-bold transition-all flex items-center justify-center gap-1 ${
                     loginMethod === 'pin'
                       ? 'bg-emerald-800 text-white shadow-sm'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  <Lock className="w-3.5 h-3.5" />
-                  <span>{t.loginWithPin}</span>
+                  <Lock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <span className="truncate">{t.loginWithPin}</span>
                 </button>
               </div>
 
-              {/* Mobile Number Field */}
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-                  📞 {t.mobileNumber}
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm">
-                    +91
-                  </span>
-                  <input
-                    type="tel"
-                    maxLength={10}
-                    value={mobile}
-                    onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
-                    placeholder="98220 12345"
-                    required
-                    className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-sm font-bold text-gray-900 tracking-wider focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
-                  />
+              {/* Password Reset Dispatched Notice */}
+              {resetSuccessMessage && (
+                <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 text-xs text-emerald-950 flex items-start gap-2 shadow-sm animate-in fade-in">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+                  <div className="font-semibold leading-relaxed">
+                    {resetSuccessMessage}
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* METHOD: EMAIL LOGIN FLOW */}
+              {loginMethod === 'email' && (
+                <div className="space-y-3.5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                      ✉️ {t.emailAddress}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Mail className="w-4 h-4" />
+                      </span>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="kisan@example.com"
+                        required
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-sm font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        🔒 {t.password}
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleForgotPassword}
+                        className="text-xs text-emerald-800 hover:text-emerald-900 font-bold hover:underline"
+                      >
+                        {t.forgotPassword}
+                      </button>
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                        <Lock className="w-4 h-4" />
+                      </span>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className="w-full pl-10 pr-11 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-sm font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoggingInWithEmail}
+                    className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-agri-900 hover:from-emerald-700 hover:to-agri-950 text-white rounded-2xl font-black text-sm sm:text-base shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
+                  >
+                    {isLoggingInWithEmail ? (
+                      <>
+                        <RefreshCw className="w-5 h-5 animate-spin text-amber-300" />
+                        <span>{language === 'mr' ? 'लॉगिन करत आहे...' : language === 'hi' ? 'लॉगिन हो रहा है...' : 'Logging in...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5 text-amber-300" />
+                        <span>{t.login}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* Mobile Number Field (Shown for Phone OTP and Kisan PIN) */}
+              {loginMethod !== 'email' && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+                    📞 {t.mobileNumber}
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500 text-sm">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      value={mobile}
+                      onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="98220 12345"
+                      required
+                      className="w-full pl-12 pr-4 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-sm font-bold text-gray-900 tracking-wider focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* METHOD 1: OTP FLOW */}
               {loginMethod === 'otp' && (
@@ -771,6 +1083,59 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
                 </div>
               </div>
 
+              {/* Email Address (Optional for Email Login) */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    ✉️ {t.emailAddress}
+                  </label>
+                  <span className="text-[10px] text-gray-400 font-medium">
+                    ({language === 'mr' ? 'पर्यायी' : language === 'hi' ? 'वैकल्पिक' : 'Optional'})
+                  </span>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Mail className="w-4 h-4" />
+                  </span>
+                  <input
+                    type="email"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                    placeholder="kisan@example.com"
+                    className="w-full pl-10 pr-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-xs sm:text-sm font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* Password for Email (Visible if email entered) */}
+              {signupEmail && (
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                    🔑 {t.password} ({language === 'mr' ? 'ईमेल लॉगिनसाठी' : language === 'hi' ? 'ईमेल लॉगिन हेतु' : 'For Email Login'})
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400">
+                      <Lock className="w-4 h-4" />
+                    </span>
+                    <input
+                      type={signupShowPassword ? 'text' : 'password'}
+                      value={signupPassword}
+                      onChange={(e) => setSignupPassword(e.target.value)}
+                      placeholder="••••••••"
+                      minLength={6}
+                      className="w-full pl-10 pr-10 py-2.5 bg-gray-50 border border-gray-300 rounded-2xl text-xs sm:text-sm font-bold text-gray-900 focus:bg-white focus:ring-2 focus:ring-emerald-600 focus:outline-none"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setSignupShowPassword(!signupShowPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    >
+                      {signupShowPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Role Selection Cards */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
@@ -895,10 +1260,20 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
               {/* Submit Button */}
               <button
                 type="submit"
-                className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-agri-900 hover:from-emerald-700 hover:to-agri-950 text-white rounded-2xl font-black text-sm sm:text-base shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2"
+                disabled={isSigningUp}
+                className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-agri-900 hover:from-emerald-700 hover:to-agri-950 text-white rounded-2xl font-black text-sm sm:text-base shadow-farmer active:scale-98 transition-all flex items-center justify-center gap-2 disabled:opacity-75"
               >
-                <CheckCircle2 className="w-5 h-5 text-amber-300" />
-                <span>{t.createAccount}</span>
+                {isSigningUp ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 animate-spin text-amber-300" />
+                    <span>{language === 'mr' ? 'नोंदणी करत आहे...' : language === 'hi' ? 'पंजीकरण हो रहा है...' : 'Creating Account...'}</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-5 h-5 text-amber-300" />
+                    <span>{t.createAccount}</span>
+                  </>
+                )}
               </button>
 
               {/* Skip Option in Sign Up Form */}

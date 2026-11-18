@@ -4,6 +4,9 @@ import {
   getAuth, 
   RecaptchaVerifier, 
   signInWithPhoneNumber, 
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signOut as firebaseSignOut,
   onAuthStateChanged 
 } from 'firebase/auth';
@@ -101,6 +104,41 @@ export const sendPhoneOtp = async (phoneNumber, appVerifier) => {
     throw new Error('Firebase Auth is not configured. Check .env configuration.');
   }
   return await signInWithPhoneNumber(auth, phoneNumber, appVerifier);
+};
+
+/**
+ * Sign in using Email and Password
+ * @param {string} email
+ * @param {string} password
+ */
+export const signInWithEmail = async (email, password) => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not configured. Check .env configuration.');
+  }
+  return await signInWithEmailAndPassword(auth, email.trim(), password);
+};
+
+/**
+ * Create a new user with Email and Password
+ * @param {string} email
+ * @param {string} password
+ */
+export const signUpWithEmail = async (email, password) => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not configured. Check .env configuration.');
+  }
+  return await createUserWithEmailAndPassword(auth, email.trim(), password);
+};
+
+/**
+ * Send password reset email
+ * @param {string} email
+ */
+export const sendPasswordReset = async (email) => {
+  if (!auth) {
+    throw new Error('Firebase Auth is not configured. Check .env configuration.');
+  }
+  return await sendPasswordResetEmail(auth, email.trim());
 };
 
 /**

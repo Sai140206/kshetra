@@ -30,7 +30,8 @@ import {
   ToggleLeft,
   ToggleRight,
   LogOut,
-  Smartphone
+  Smartphone,
+  Mail
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { LOCATIONS } from '../data/seedData';
@@ -384,10 +385,18 @@ export const UserProfile = ({ onClose, isPage = false, onNavigateTab }) => {
                 </h2>
 
                 <div className="flex items-center gap-3 text-xs text-soil-200 mt-0.5 flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <Phone className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>+91 {currentUser.mobile}</span>
-                  </span>
+                  {currentUser.mobile && (
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>+91 {currentUser.mobile}</span>
+                    </span>
+                  )}
+                  {currentUser.email && (
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>{currentUser.email}</span>
+                    </span>
+                  )}
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-emerald-400" />
