@@ -22,13 +22,13 @@ import {
 } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || 'AIzaSyAv9gc2qcen5D_fktIDruskaze0bjRBT6U',
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'kshetra-62e76.firebaseapp.com',
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || 'kshetra-62e76',
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || 'kshetra-62e76.firebasestorage.app',
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '1064026188858',
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || '1:1064026188858:web:b1d996807aa396a236d903',
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || 'G-ZC6HQKMPQH'
 };
 
 // Check if valid Firebase configuration is provided
