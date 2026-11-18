@@ -95,7 +95,7 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
 
   if (!isOpen && !isPage) return null;
 
-  // Handle Send OTP
+  // Handle Send OTP (Real Live SMS via Firebase)
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     setFirebaseError('');
@@ -104,122 +104,128 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
       return;
     }
 
-    if (isFirebaseConfigured) {
-      setIsSendingOtp(true);
-      try {
-        const appVerifier = setupRecaptcha('recaptcha-container');
-        const formattedPhone = `+91${mobile.trim()}`;
-        const confirmation = await sendPhoneOtp(formattedPhone, appVerifier);
-        setConfirmationResult(confirmation);
-        setOtpSent(true);
-        setOtpTimer(60);
-        setOtpValue('');
-        const sms = language === 'mr'
-          ? `[Firebase SMS] आपल्या +91 ${mobile} मोबाईलवर खरा OTP पाठवला गेला आहे.`
+    if (!isFirebaseConfigured) {
+      setFirebaseError(
+        language === 'mr'
+          ? 'Firebase कॉन्फिगरेशन आढळले नाही. कृपया .env तपासा.'
           : language === 'hi'
-          ? `[Firebase SMS] आपके +91 ${mobile} नंबर पर वास्तविक OTP भेजा गया है।`
-          : `[Firebase SMS] Real OTP code has been dispatched to +91 ${mobile}.`;
-        setSimulatedSmsBanner(sms);
-      } catch (err) {
-        console.warn('Firebase Phone Auth attempt:', err);
-        let errorMsg = err.message || 'Failed to send OTP via SMS';
-        if (err.code === 'auth/invalid-phone-number') {
-          errorMsg = language === 'mr' ? 'अवैध फोन नंबर.' : language === 'hi' ? 'अमान्य फोन नंबर।' : 'Invalid phone number format.';
-        } else if (err.code === 'auth/too-many-requests') {
-          errorMsg = language === 'mr' ? 'खूप प्रयत्न केले. कृपया थोड्या वेळाने प्रयत्न करा.' : language === 'hi' ? 'बहुत सारे प्रयास। कृपया थोड़ी देर बाद पुनः प्रयास करें।' : 'Too many attempts. Please try again later.';
-        } else if (err.code === 'auth/quota-exceeded') {
-          errorMsg = language === 'mr' ? 'SMS मर्यादा संपली. चाचणीसाठी १२३४ वापरा.' : language === 'hi' ? 'SMS कोटा समाप्त। टेस्ट हेतु 1234 का उपयोग करें।' : 'SMS quota exceeded. Use demo OTP 1234.';
-        }
-        setFirebaseError(errorMsg);
-        // Fallback to simulated OTP
-        setOtpSent(true);
-        setOtpTimer(45);
-        setOtpValue('');
-        const fallbackSms = language === 'mr'
-          ? `[फॉलबॅक SMS] चाचणीसाठी OTP १२३४ (1234) वापरा.`
-          : language === 'hi'
-          ? `[फ़ॉलबैक SMS] टेस्ट हेतु OTP 1234 का उपयोग करें।`
-          : `[Fallback SMS] Test demo OTP is 1234.`;
-        setSimulatedSmsBanner(fallbackSms);
-      } finally {
-        setIsSendingOtp(false);
-      }
+          ? 'Firebase कॉन्फ़िगरेशन नहीं मिला। कृपया .env चेक करें।'
+          : 'Firebase configuration not found. Please check your .env settings.'
+      );
       return;
     }
 
-    setOtpSent(true);
-    setOtpTimer(45);
-    setOtpValue('');
-    const sms = language === 'mr'
-      ? `[KSHETRA SMS] आपला एकवेळचा लॉगिन पासवर्ड (OTP) १२३४ (1234) आहे. कोणाशीही शेअर करू नका.`
-      : language === 'hi'
-      ? `[KSHETRA SMS] आपका वन-टाइम लॉगिन पासवर्ड (OTP) 1234 है। किसी से साझा न करें।`
-      : `[KSHETRA SMS] Your one-time login OTP is 1234. Do not share with anyone.`;
-    setSimulatedSmsBanner(sms);
+    setIsSendingOtp(true);
+    try {
+      const appVerifier = setupRecaptcha('recaptcha-container');
+      const formattedPhone = `+91${mobile.trim()}`;
+      const confirmation = await sendPhoneOtp(formattedPhone, appVerifier);
+      setConfirmationResult(confirmation);
+      setOtpSent(true);
+      setOtpTimer(60);
+      setOtpValue('');
+      const sms = language === 'mr'
+        ? `आपल्या +91 ${mobile} नंबरवर खरा ६-अंकी SMS OTP पाठवला गेला आहे.`
+        : language === 'hi'
+        ? `आपके +91 ${mobile} नंबर पर वास्तविक 6-अंकीय SMS OTP भेजा गया है।`
+        : `Real 6-digit verification OTP has been dispatched via SMS to +91 ${mobile}.`;
+      setSimulatedSmsBanner(sms);
+    } catch (err) {
+      console.error('Firebase Phone Auth error:', err);
+      let errorMsg = err.message || 'Failed to send OTP via SMS';
+      if (err.code === 'auth/invalid-phone-number') {
+        errorMsg = language === 'mr' ? 'अवैध फोन नंबर.' : language === 'hi' ? 'अमान्य फोन नंबर।' : 'Invalid phone number format.';
+      } else if (err.code === 'auth/too-many-requests') {
+        errorMsg = language === 'mr' ? 'खूप प्रयत्न केले. कृपया थोड्या वेळाने प्रयत्न करा.' : language === 'hi' ? 'बहुत सारे प्रयास। कृपया थोड़ी देर बाद पुनः प्रयास करें।' : 'Too many attempts. Please try again later.';
+      } else if (err.code === 'auth/quota-exceeded') {
+        errorMsg = language === 'mr' ? 'दैनिक SMS मर्यादा संपली.' : language === 'hi' ? 'दैनिक SMS कोटा समाप्त।' : 'Daily SMS quota exceeded in Firebase.';
+      } else if (err.code === 'auth/operation-not-allowed') {
+        errorMsg = language === 'mr'
+          ? 'Firebase Console मध्ये Phone Authentication सक्षम (Enable) केलेले नाही. कृपया Authentication -> Sign-in method -> Phone Enable करा.'
+          : language === 'hi'
+          ? 'Firebase Console में Phone Authentication सक्षम (Enable) नहीं है। कृपया Authentication -> Sign-in method -> Phone Enable करें।'
+          : 'Phone Authentication is not enabled in Firebase Console. Please enable it in Authentication -> Sign-in method.';
+      }
+      setFirebaseError(errorMsg);
+      setOtpSent(false);
+      setConfirmationResult(null);
+    } finally {
+      setIsSendingOtp(false);
+    }
   };
 
-  // Auto-fill demo OTP
-  const handleFillDemoOtp = () => {
-    setOtpValue(confirmationResult ? '123456' : '1234');
-  };
-
-  // Handle Login Submission
+  // Handle Login Submission (Real Firebase OTP only)
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
     setFirebaseError('');
 
     if (loginMethod === 'otp') {
-      if (confirmationResult) {
-        setIsVerifyingOtp(true);
-        try {
-          const result = await confirmationResult.confirm(otpValue);
-          const firebaseUser = result.user;
-          const uid = firebaseUser.uid;
-          const phone = firebaseUser.phoneNumber || `+91${mobile}`;
-
-          // Check if user has an existing profile in Firestore
-          let profile = await getUserProfile(uid);
-
-          if (!profile) {
-            const loc = LOCATIONS.find((l) => l.id === selectedLocation.id) || LOCATIONS[0];
-            profile = {
-              id: uid,
-              uid: uid,
-              name: language === 'mr' ? 'शेतकरी' : language === 'hi' ? 'किसान' : 'Kisan Farmer',
-              mobile: mobile || phone.replace('+91', ''),
-              role: 'farmer',
-              location: loc,
-              landAcre: '3.5',
-              primaryCrop: language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane',
-              joinedDate: new Date().toISOString().split('T')[0],
-              isVerified: true
-            };
-            await saveUserProfile(uid, profile);
-          }
-
-          loginUser(profile);
-          if (onAuthSuccess) onAuthSuccess(profile);
-          if (onClose) onClose();
-          return;
-        } catch (err) {
-          console.error('Firebase OTP verify error:', err);
-          setFirebaseError(
-            language === 'mr' 
-              ? 'अवैध OTP! कृपया SMS तपासून पुन्हा टाका.' 
-              : language === 'hi' 
-              ? 'अमान्य OTP! कृपया SMS देखकर पुनः दर्ज करें।' 
-              : 'Invalid OTP code. Please check your SMS and retry.'
-          );
-          setIsVerifyingOtp(false);
-          return;
-        } finally {
-          setIsVerifyingOtp(false);
-        }
+      if (!confirmationResult) {
+        setFirebaseError(
+          language === 'mr'
+            ? 'कृपया आधी मोबाईल नंबर टाकून OTP मागवा.'
+            : language === 'hi'
+            ? 'कृपया पहले मोबाइल नंबर डालकर OTP प्राप्त करें।'
+            : 'Please request an OTP first.'
+        );
+        return;
       }
 
-      if (otpValue !== '1234') {
-        alert(language === 'mr' ? 'अवैध OTP! चाचणीसाठी १२३४ (1234) वापरा.' : language === 'hi' ? 'अमान्य OTP! टेस्ट के लिए 1234 दर्ज करें।' : 'Invalid OTP! Please use 1234 for testing.');
+      if (!otpValue || otpValue.length < 6) {
+        setFirebaseError(
+          language === 'mr'
+            ? 'कृपया आपल्या मोबाईलवर आलेला ६-अंकी OTP टाका.'
+            : language === 'hi'
+            ? 'कृपया अपने मोबाइल पर प्राप्त 6-अंकीय OTP दर्ज करें।'
+            : 'Please enter the 6-digit OTP code received on your phone.'
+        );
         return;
+      }
+
+      setIsVerifyingOtp(true);
+      try {
+        const result = await confirmationResult.confirm(otpValue);
+        const firebaseUser = result.user;
+        const uid = firebaseUser.uid;
+        const phone = firebaseUser.phoneNumber || `+91${mobile}`;
+
+        // Check if user has an existing profile in Firestore
+        let profile = await getUserProfile(uid);
+
+        if (!profile) {
+          const loc = LOCATIONS.find((l) => l.id === selectedLocation.id) || LOCATIONS[0];
+          profile = {
+            id: uid,
+            uid: uid,
+            name: language === 'mr' ? 'शेतकरी' : language === 'hi' ? 'किसान' : 'Kisan Farmer',
+            mobile: mobile || phone.replace('+91', ''),
+            role: 'farmer',
+            location: loc,
+            landAcre: '3.5',
+            primaryCrop: language === 'mr' ? 'कांदा व ऊस' : language === 'hi' ? 'प्याज व गन्ना' : 'Onion & Sugarcane',
+            joinedDate: new Date().toISOString().split('T')[0],
+            isVerified: true
+          };
+          await saveUserProfile(uid, profile);
+        }
+
+        loginUser(profile);
+        if (onAuthSuccess) onAuthSuccess(profile);
+        if (onClose) onClose();
+        return;
+      } catch (err) {
+        console.error('Firebase OTP verify error:', err);
+        setFirebaseError(
+          language === 'mr' 
+            ? 'अवैध किंवा चुकीचा OTP! कृपया SMS तपासून पुन्हा टाका.' 
+            : language === 'hi' 
+            ? 'अमान्य या गलत OTP! कृपया SMS देखकर पुनः दर्ज करें।' 
+            : 'Invalid OTP code. Please check your SMS and retry.'
+        );
+        setIsVerifyingOtp(false);
+        return;
+      } finally {
+        setIsVerifyingOtp(false);
       }
     } else {
       if (!pin || pin.length < 4) {
@@ -445,30 +451,21 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
             </div>
           )}
 
-          {/* Simulated SMS Alert Banner when OTP is sent */}
+          {/* Real Live SMS Status Banner when OTP is sent */}
           {otpSent && simulatedSmsBanner && (
-            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 text-xs text-amber-950 animate-in slide-in-from-top-2 shadow-sm space-y-1.5">
-              <div className="flex items-center justify-between font-bold text-amber-900">
-                <span className="flex items-center gap-1">
-                  <Smartphone className="w-4 h-4 text-amber-700" />
-                  <span>{confirmationResult ? 'SMS Dispatch Status:' : (language === 'mr' ? 'प्राप्त झालेला SMS (चाचणी संदेश):' : language === 'hi' ? 'प्राप्त SMS (टेस्ट मैसेज):' : 'Received SMS (Test Simulation):')}</span>
+            <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 text-xs text-emerald-950 animate-in slide-in-from-top-2 shadow-sm space-y-1">
+              <div className="flex items-center justify-between font-bold text-emerald-900">
+                <span className="flex items-center gap-1.5">
+                  <Smartphone className="w-4 h-4 text-emerald-700" />
+                  <span>
+                    {language === 'mr' ? 'SMS पाठवला गेला:' : language === 'hi' ? 'SMS भेजा गया:' : 'SMS Dispatched:'}
+                  </span>
                 </span>
-                <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
-                  confirmationResult ? 'bg-emerald-200 text-emerald-900' : 'bg-amber-200 text-amber-950'
-                }`}>
-                  {confirmationResult ? 'Firebase Live SMS' : 'OTP: 1234'}
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-200 text-emerald-900 border border-emerald-300">
+                  Firebase Live SMS
                 </span>
               </div>
-              <p className="font-semibold text-gray-800 italic">"{simulatedSmsBanner}"</p>
-              {!confirmationResult && (
-                <button
-                  type="button"
-                  onClick={handleFillDemoOtp}
-                  className="w-full py-1.5 bg-amber-400 hover:bg-amber-500 text-gray-950 rounded-xl font-black text-xs transition-colors flex items-center justify-center gap-1 shadow-sm mt-1"
-                >
-                  <span>⚡ {t.fillDemoOtp}</span>
-                </button>
-              )}
+              <p className="font-semibold text-emerald-950">{simulatedSmsBanner}</p>
             </div>
           )}
 
@@ -558,7 +555,7 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
                       <div>
                         <div className="flex justify-between items-center mb-1">
                           <label className="text-xs font-bold text-gray-700 uppercase">
-                            🔑 {t.enterOtp} ({confirmationResult ? '6 Digits' : '4 Digits'})
+                            🔑 {t.enterOtp} (6 Digits)
                           </label>
                           <span className="text-[11px] font-bold text-emerald-800">
                             {t.otpSentTo} {mobile}
@@ -566,10 +563,10 @@ export const AuthModal = ({ isOpen = true, onClose, onAuthSuccess, onSkip, isPag
                         </div>
                         <input
                           type="text"
-                          maxLength={confirmationResult ? 6 : 4}
+                          maxLength={6}
                           value={otpValue}
                           onChange={(e) => setOtpValue(e.target.value.replace(/[^0-9]/g, ''))}
-                          placeholder={confirmationResult ? '• • • • • •' : '• • • •'}
+                          placeholder="• • • • • •"
                           autoFocus
                           required
                           className="w-full py-2.5 text-center text-xl font-mono font-black tracking-widest bg-emerald-50/50 border-2 border-emerald-400 rounded-2xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-600"
