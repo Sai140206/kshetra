@@ -6,9 +6,9 @@
 
 ---
 
-## 🌟 Key Features
+##  Key Features
 
-### 1. 🤝 Saha-Kisan (Community Transport & Equipment Pooling)
+### 1.  Saha-Kisan (Community Transport & Equipment Pooling)
 - **Problem**: Small & marginal farmers cannot afford individual transport to distant mandis or rent heavy equipment alone.
 - **Solution**: Collaborative cargo space and harvester schedule pooling with live capacity visualization, pickup route milestones, and split freight calculation.
 
