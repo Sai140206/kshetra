@@ -8,25 +8,25 @@
 
 ##  Key Features
 
-### 1.  Saha-Kisan (Community Transport & Equipment Pooling)
+### 1. Saha-Kisan (Community Transport & Equipment Pooling)
 - **Problem**: Small & marginal farmers cannot afford individual transport to distant mandis or rent heavy equipment alone.
 - **Solution**: Collaborative cargo space and harvester schedule pooling with live capacity visualization, pickup route milestones, and split freight calculation.
 
-### 2. 📊 Smart Mandi Net-Profit Arbitrage Calculator
+### 2. Smart Mandi Net-Profit Arbitrage Calculator
 - **Problem**: Raw APMC prices don't account for fuel, tolls, mandi cess, and loading labor.
 - **Solution**: Evaluates real take-home profit:
   $$\text{Net Profit} = (\text{Mandi Price} \times \text{Quantity}) - (\text{Distance} \times \text{Cost/km}) - \text{Loading Charges} - \text{Mandi Cess}$$
   Highlights the optimal mandi with a clear **"Best Deal"** badge and voice summary.
 
-### 3. 🚨 Gram-Mechanic SOS Dispatch
+### 3. Gram-Mechanic SOS Dispatch
 - **Problem**: Machinery breakdowns during sowing/harvesting windows risk crop ruin.
 - **Solution**: 1-tap emergency beacon broadcasting GPS plot coordinates to verified mobile mechanics within 10 km, complete with ETA and WhatsApp dispatch integration.
 
-### 4. 🎙️ Vani-AI Voice Navigation
+### 4. Vani-AI Voice Navigation
 - **Problem**: Typing in sunlight or navigating complex UIs is a barrier for rural users.
 - **Solution**: Voice-driven action bar using Web Speech API with regional phrase chips to automatically navigate, filter, and inspect services.
 
-### 5. ⛅ Weather Advisory & Local Service Marketplace
+### 5. Weather Advisory & Local Service Marketplace
 - Hyperlocal crop advisories based on upcoming rain/pest alerts.
 - Verified directory for tractors, drone sprayers, harvesters, cold storages, and local farm labor.
 
